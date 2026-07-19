@@ -76,6 +76,18 @@ npm install --production --no-fund --no-audit
 
 cd "${BASE_PATH}"
 
+# Download native binary dependencies (PTY, Zip-Tools, 7z)
+echo "Downloading native binary dependencies..."
+mkdir -p "${OUTPUT_DIR}/daemon/lib"
+while IFS= read -r url; do
+  [ -z "$url" ] && continue
+  filename=$(basename "$url")
+  echo "  Downloading $filename..."
+  wget -q --show-progress "$url" -O "${OUTPUT_DIR}/daemon/lib/$filename" || {
+    echo "  Warning: Failed to download $filename"
+  }
+done < "${BASE_PATH}/lib-urls.txt"
+
 # Create start-daemon.sh
 cat > "${OUTPUT_DIR}/start-daemon.sh" << 'EOF'
 #!/bin/bash
