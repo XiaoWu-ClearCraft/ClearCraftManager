@@ -1,279 +1,100 @@
+# ClearCraftManager
+
 <div align="center">
-  <a href="https://mcsmanager.com/" target="_blank">
-    <img src="https://public-link.oss-cn-shenzhen.aliyuncs.com/mcsm_picture/logo.png" alt="MCSManagerLogo.png" width="510px" />    
-  </a>
-
   <br />
   <br />
 
-[![--](https://img.shields.io/badge/Support%20Platform-Windows/Linux/Mac-green.svg)](https://github.com/MCSManager)
+[![--](https://img.shields.io/badge/Support%20Platform-Windows/Linux/Mac-green.svg)](https://github.com/XiaoWu-ClearCraft/ClearCraftManager)
 [![Status](https://img.shields.io/badge/NPM-v8.9.14-blue.svg)](https://www.npmjs.com/)
 [![Status](https://img.shields.io/badge/Node-v16.20.2-blue.svg)](https://nodejs.org/en/download/)
-[![Status](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://github.com/MCSManager)
-
-<p align="center">
-  <a href="http://mcsmanager.com/"><img alt="Official Website" src="https://img.shields.io/badge/Site-Official Website-yellow"></a>
-  <a href="https://docs.mcsmanager.com/"><img alt="EnglishDocs" src="https://img.shields.io/badge/Docs-English Document-blue"></a>
-  <a href="https://discord.gg/BNpYMVX7Cd"><img alt="Discord" src="https://img.shields.io/badge/Discord-Join Us-5866f4"></a>
-  
-</p>
-
-<br />
-
-[English](README.md) - [简体中文](README_ZH.md) - [繁體中文](README_TW.md) - [日本語](README_JP.md) - [Deutsch](README_DE.md) - [Русский](README_RU.md) - [Spanish](README_ES.md) - [Thai](README_TH.md) - [Français](README_FR.md) - [Português BR](README_PTBR.md)
+[![Status](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 </div>
 
-<br />
-
 ## What is this?
 
-**MCSManager Panel** (or simply **MCSM Panel**) is a fast-deploying, distributed, multi-user, and modern web-based management panel for **`Minecraft`**, **`Steam`**, and other game servers.
+**ClearCraftManager** is a customized game server management panel based on **MCSManager** secondary development, specifically designed for the operation of **ClearCraft** servers.
 
-MCSManager has gained popularity within the **`Minecraft`** and **`Steam`** gaming communities. It enables you to manage multiple physical or virtual servers from a single platform, and offers a **secure**, **reliable**, and **granular multi-user permission system**. The MCSM Panel continues to support server administrators, operators, and independent developers, managing servers like **`Minecraft`**, **`Terraria`**, and other **`Steam`**-based games for them.
+ClearCraftManager is a web-based, multi-user, distributed management panel that supports **Minecraft**, **Steam**, and other game servers. It inherits the core capabilities of MCSManager and adds native **Podman** container backend support.
 
-MCSM also has **commercial applications** in mind, such as private server hosting and sales by **IDC service providers**. Several small and medium-sized enterprises already use the panel as a combined **server management** and **sales platform**. In addition, it supports **multi-language environments**, making it accessible to users across different countries and regions.
-
-<img width="1871" height="1342" alt="terminal" src="https://github.com/user-attachments/assets/7f6ed988-e402-4347-94ee-a0469f6658da" />
-
-<img width="1915" height="1386" alt="market" src="https://github.com/user-attachments/assets/fc276180-a826-476a-803e-a038f97115fc" />
-
-<img width="3164" height="2060" alt="1" src="https://github.com/user-attachments/assets/570d2447-66dc-4c0b-b2d2-4c3176b51d67" />
-
-<img width="3164" height="2060" alt="3" src="https://github.com/user-attachments/assets/2722cf9f-de9b-4630-b0ea-c00283791d8d" />
+> This project is a fork of [MCSManager](https://github.com/MCSManager/MCSManager) and is **not affiliated with the MCSManager official team**. ClearCraft retains ownership of all modified and added code.
 
 <br />
 
 ## Features
 
-1. One-click deployment of **`Minecraft`** or **`Steam`** game servers via the built-in application marketplace.
-2. Compatible with most **`Steam`**-based game servers, including **`Palworld`**, **`Squad`**, **`Project Zomboid`**, **`Terraria`**, and more.
-3. Customizable web interface with drag-and-drop card layout to build your ideal dashboard.
-4. Full **Docker Hub** image support, with built-in multi-user access and support for commercial instance hosting services.
+1. One-click deployment of game servers via the built-in application marketplace.
+2. Support for most **Steam**-based game servers.
+3. Customizable web interface with drag-and-drop card layout.
+4. Full **Docker** and **Podman** container image support, with switchable container backend.
 5. Distributed architecture, managing multiple machines from a single web panel.
-6. Lightweight technology stack. The entire project can be developed and maintained with TypeScript alone.
-7. ...and much more.
+6. Multi-user permission system.
+7. ...and more.
 
 <br />
 
 ## Runtime Environment
 
-The control panel runs on both **`Windows`** and **`Linux`** platforms. No database installation is required. Simply install the **`Node.js`** runtime and a few basic **decompression utilities**.
-
-> Requires **[Node.js 16.20.2](https://nodejs.org/en)** or higher.
-> It is recommended to use the **latest LTS version** for best compatibility and stability.
+- Requires **[Node.js 16.20.2](https://nodejs.org/en)** or higher (latest LTS recommended).
+- Supports **Windows**, **Linux**, and **macOS**.
 
 <br />
 
-## Official Documentation
-
-English: https://docs.mcsmanager.com/
-
-Chinese: https://docs.mcsmanager.com/zh_cn/
-
-<br />
-
-## Installation
+## Quick Start
 
 ### Windows
 
-**For Windows systems, it comes as a ready-to-run integrated version - download and run it immediately.**
-
-Archive: https://download.mcsmanager.com/mcsmanager_windows_release.zip
-
-Double-click `start.bat` to launch both the web panel and daemon process.
-
-<br />
+Download the latest release and double-click `start.bat`.
 
 ### Linux
 
-**One-line command quick installation**
-
 ```bash
-sudo su -c "wget -qO- https://script.mcsmanager.com/setup.sh | bash"
+# One-line command quick installation
+sudo su -c "wget -qO- https://raw.githubusercontent.com/XiaoWu-ClearCraft/ClearCraftManager/main/setup.sh | bash"
+
+# After installation
+systemctl start mcsm-{web,daemon}
 ```
 
-**Usage after installation**
+### Manual Installation
 
 ```bash
-systemctl start mcsm-{web,daemon} # Start panel
-systemctl stop mcsm-{web,daemon}  # Stop panel
-```
-
-- Script only applies to Ubuntu/Centos/Debian/Archlinux
-- Panel code and runtime environment are automatically installed in the `/opt/mcsmanager/` directory.
-
-<br />
-
-**Linux Manual Installation**
-
-- If the one-click installation method doesn't work, you can install MCSManager manually by following the steps below:
-
-```bash
-# Step 1: Navigate to the installation directory (create it if it doesn't exist)
 cd /opt/
-
-# Step 2: (Optional) Download and install Node.js if it's not already installed
 wget https://nodejs.org/dist/v20.11.0/node-v20.11.0-linux-x64.tar.xz
 tar -xvf node-v20.11.0-linux-x64.tar.xz
-
-# Add Node.js and npm to the system path
 ln -s /opt/node-v20.11.0-linux-x64/bin/node /usr/bin/node
 ln -s /opt/node-v20.11.0-linux-x64/bin/npm /usr/bin/npm
 
-# Step 3: Prepare the MCSManager installation directory
 mkdir /opt/mcsmanager/
 cd /opt/mcsmanager/
-
-# Step 4: Download the latest MCSManager release
-wget https://github.com/MCSManager/MCSManager/releases/latest/download/mcsmanager_linux_release.tar.gz
-tar -zxf mcsmanager_linux_release.tar.gz
-
-# Step 5: Install dependencies
+wget https://github.com/XiaoWu-ClearCraft/ClearCraftManager/releases/latest/download/clearcraftmanager_linux_release.tar.gz || \
+wget https://gh.xmly.dev/https://github.com/XiaoWu-ClearCraft/ClearCraftManager/releases/latest/download/clearcraftmanager_linux_release.tar.gz
+tar -zxf clearcraftmanager_linux_release.tar.gz
 chmod 775 install.sh
 ./install.sh
 
-# Step 6: Open two terminal windows or use screen/tmux
-
-# In the first terminal: start the daemon
+# Start daemon
 ./start-daemon.sh
 
-# In the second terminal: start the web service
+# Start web service (in another terminal)
 ./start-web.sh
 
-# Step 7: Access the panel in your browser
-# Replace <public IP> with your server's actual IP address
-http://<public IP>:23333/
-
-# The web interface will automatically detect and connect to the local daemon in most cases.
-```
-
-> The above steps do **not** register the panel as a system service.  
-> To keep it running in the background, you’ll need to use tools like **`screen`** or **`tmux`**.
-
-If you prefer to run MCSManager as a system service, please refer to the official documentation for setup instructions.
-
-<br />
-
-### Mac OS
-
-```bash
-
-# Step 1: Install Node.js (skip if already installed)
-# It's recommended to use the latest LTS version
-brew install node
-node -v
-npm -v
-
-# Step 2: Download the latest release using curl
-curl -L https://github.com/MCSManager/MCSManager/releases/latest/download/mcsmanager_linux_release.tar.gz -o mcsmanager_linux_release.tar.gz
-
-# Step 3: Extract the downloaded archive
-tar -zxf mcsmanager_linux_release.tar.gz
-
-# Step 4: Enter the extracted directory
-cd mcsmanager
-
-# Step 5: Make the installer executable and run it
-chmod 775 install.sh
-./install.sh
-
-# Step 6: Open two terminal windows or use screen/tmux to run services in parallel
-
-# In the first terminal: start the daemon
-./start-daemon.sh
-
-# In the second terminal: start the web service
-./start-web.sh
-
-# Access the panel at: http://localhost:23333/
-# The web interface will typically auto-detect and connect to the local daemon.
+# Access: http://<your-ip>:23333/
 ```
 
 <br />
 
-### Docker Installation
+## Container Backend Support
 
-Install the panel using docker-compose.yml, note that you need to modify all `<CHANGE_ME_TO_INSTALL_PATH>` in it to your actual installation directory.
+ClearCraftManager supports both **Docker** and **Podman** as container backends.
 
-```yml
-services:
-  web:
-    image: githubyumao/mcsmanager-web:latest
-    ports:
-      - "23333:23333"
-    volumes:
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-      - <CHANGE_ME_TO_INSTALL_PATH>/web/data:/opt/mcsmanager/web/data
-      - <CHANGE_ME_TO_INSTALL_PATH>/web/logs:/opt/mcsmanager/web/logs
-      - <CHANGE_ME_TO_INSTALL_PATH>/web/public/upload_files:/opt/mcsmanager/web/public/upload_files
-
-  daemon:
-    image: githubyumao/mcsmanager-daemon:latest
-    restart: unless-stopped
-    ports:
-      - "24444:24444"
-    environment:
-      - MCSM_DOCKER_WORKSPACE_PATH=<CHANGE_ME_TO_INSTALL_PATH>/daemon/data/InstanceData
-    volumes:
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-      - <CHANGE_ME_TO_INSTALL_PATH>/daemon/data:/opt/mcsmanager/daemon/data
-      - <CHANGE_ME_TO_INSTALL_PATH>/daemon/logs:/opt/mcsmanager/daemon/logs
-      - /var/run/docker.sock:/var/run/docker.sock
-```
-
-Note (Rootless Docker on Linux): the daemon supports `DOCKER_HOST`. If your Docker daemon runs in rootless mode, the socket is usually at `/run/user/<uid>/docker.sock` instead of `/var/run/docker.sock`. In that case, replace the default socket mount with the rootless socket and set `DOCKER_HOST`, for example:
-
-```yml
-  daemon:
-    environment:
-      - DOCKER_HOST=unix:///run/user/1000/docker.sock
-    volumes:
-      - /run/user/1000/docker.sock:/run/user/1000/docker.sock
-```
-
-Replace `1000` with your actual UID (`id -u`).
-
-Enable using docker-compose.
-
-```bash
-mkdir -p <CHANGE_ME_TO_INSTALL_PATH>
-cd <CHANGE_ME_TO_INSTALL_PATH>
-vim docker-compose.yml # Write the above docker-compose.yml content here
-docker compose pull && docker compose up -d
-```
-
-Note: After Docker installation, the Web side may no longer be able to automatically connect to the Daemon.
-
-At this point, if you enter the panel, you should see some errors because the Web side has not successfully connected to the daemon side, you need to create a new node to connect them together.
-
-<br />
-
-## Contributing Code
-
-Before contributing code to this project, please make sure to review the following:
-
-- **Must read:** [Issue #599 – Contribution Guidelines](https://github.com/MCSManager/MCSManager/issues/599)
-- Please maintain the existing code structure and formatting, **do not apply unnecessary or excessive formatting changes.**
-- All submitted code **must follow internationalization (i18n) standards**.
-
-### Bug Reports
-
-We welcome all bug reports and feedback. Your contributions help us improve the project.
-
-If you encounter any issues, please report them via the [GitHub Issues](https://github.com/MCSManager/MCSManager/issues) page, and we’ll address them as soon as possible.
-
-For serious **security vulnerabilities** that should not be disclosed publicly, please contact us directly at: **support@mcsmanager.com**
-
-Once resolved, we will credit the discoverer in the relevant code or release notes.
-
-### Acknowledgements
-
-Thanks to the following developers for making important contributions to the security testing of MCSManager!
-
-> [@Cuo256](https://github.com/Cuo256), [@xiaosu](https://github.com/xiaosuawa), [@tianjiefeifei](https://github.com/tianjiefeifei)
+- Set the global default in **Settings → Basic Info → Container Backend**
+- Configure per-node in **Node Management → Advanced Settings → Container Backend**
+- Supported socket paths:
+  - Docker Linux: `/var/run/docker.sock`
+  - Podman rootful: `/run/podman/podman.sock`
+  - Podman rootless: `$XDG_RUNTIME_DIR/podman/podman.sock`
+  - The `DOCKER_HOST` environment variable always takes precedence
 
 <br />
 
@@ -281,60 +102,33 @@ Thanks to the following developers for making important contributions to the sec
 
 ### Project Structure
 
-The project comprises three core modules:
-
-- Daemon backend (`daemon` directory)
-- Web backend (`panel` directory)
-- Web frontend (`frontend` directory)
-
-**Web Backend Responsibilities:**
-
-- User management
-- Node connectivity
-- Authentication and authorization
-- API services
-
-**Daemon Backend Responsibilities:**
-
-- Process management for server instances
-- Docker container operations
-- File system management
-- Real-time terminal access
-
-**Web Frontend Responsibilities:**
-
-- User interface implementation
-- Web backend integration
-- Direct node communication for optimized performance
-
-### Setting Up Development Environment
-
-See: [DEVELOPMENT.md](./DEVELOPMENT.md)
+- `daemon/` - Daemon backend (process management, Docker/Podman operations, file system)
+- `panel/` - Web backend (user management, node connectivity, API services)
+- `frontend/` - Web frontend (Vue 3, Vite)
+- `common/` - Shared library
+- `languages/` - Internationalization files
 
 <br />
-
-## Browser Compatibility
-
-MCSManager supports all major modern browsers, including:
-
-- `Chrome`
-- `Firefox`
-- `Safari`
-- `Opera`
-
-**Internet Explorer (IE)** is no longer supported.
-
-<br />
-
-
-## Contributors
-
-<a href="https://openomy.com/MCSManager/MCSManager" target="_blank" style="display: block; width: 100%;" align="center">
-  <img src="https://openomy.com/svg?repo=MCSManager/MCSManager&chart=bubble&latestMonth=12" target="_blank" alt="Contribution Leaderboard" style="display: block; width: 100%;" />
-</a>
 
 ## License
 
 This project is licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
-&copy; 2025 MCSManager. All rights reserved.
+- The original codebase is derived from [MCSManager](https://github.com/MCSManager/MCSManager), Copyright &copy; MCSManager.
+- Modifications and additions are Copyright &copy; ClearCraft. All rights reserved.
+
+```
+Copyright 2025 MCSManager
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```

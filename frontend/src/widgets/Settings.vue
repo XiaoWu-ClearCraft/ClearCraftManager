@@ -1,3 +1,5 @@
+// Modified by XiaoWu-ClearCraft on 2026-07-19
+// 修改说明：设置页基础信息新增容器后端选择器（Docker/Podman）
 <script setup lang="ts">
 import { getProPanelUrl } from "@/components/IframeBox/config";
 import IframeBox from "@/components/IframeBox/index.vue";
@@ -529,6 +531,17 @@ onUnmounted(() => {
                       v-model:value="formData.panelId"
                       :placeholder="t('TXT_CODE_4ea93630')"
                     />
+                  </a-form-item>
+
+                  <a-form-item>
+                    <a-typography-title :level="5">{{ t("TXT_CODE_CONTAINER_BACKEND") }}</a-typography-title>
+                    <a-typography-paragraph type="secondary">
+                      {{ t("TXT_CODE_CONTAINER_BACKEND_DESC") }}
+                    </a-typography-paragraph>
+                    <a-select v-model:value="formData.containerBackend" style="max-width: 320px">
+                      <a-select-option value="docker">Docker</a-select-option>
+                      <a-select-option value="podman">Podman</a-select-option>
+                    </a-select>
                   </a-form-item>
 
                   <div class="button">

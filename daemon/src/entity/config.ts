@@ -1,3 +1,5 @@
+// Modified by XiaoWu-ClearCraft on 2026-07-19
+// 修改说明：新增 containerBackend 配置字段，支持 Podman 容器后端
 import { v4 } from "uuid";
 import StorageSubsystem from "../common/system_storage";
 
@@ -37,6 +39,9 @@ class Config {
   // but may increase memory usage under high output load.
   // default: 256 (~64KB per flush), range: 16-4096
   public outputBufferSize = 256;
+
+  // Container runtime backend: "docker" or "podman"
+  public containerBackend = "docker";
 
   // Daemon shutdown behavior
   public enableSoftShutdown = true;

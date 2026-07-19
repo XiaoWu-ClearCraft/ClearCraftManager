@@ -1,3 +1,5 @@
+// Modified by XiaoWu-ClearCraft on 2026-07-19
+// 修改说明：新增 changeDaemonContainerBackend 方法，批量推送容器后端配置到所有 daemon
 import fs from "fs-extra";
 import path from "path";
 import Storage from "../common/storage/sys_storage";
@@ -139,6 +141,12 @@ class RemoteServiceSubsystem extends UniversalRemoteSubsystem<RemoteService> {
   changeDaemonLanguage(language: string) {
     for (const iterator of this.services.entries()) {
       iterator[1].setLanguage(language);
+    }
+  }
+
+  changeDaemonContainerBackend(backend: string) {
+    for (const iterator of this.services.entries()) {
+      iterator[1].setContainerBackend(backend);
     }
   }
 }

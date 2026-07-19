@@ -1,3 +1,5 @@
+// Modified by XiaoWu-ClearCraft on 2026-07-19
+// 修改说明：settings_router 处理 containerBackend 字段更新，并推送到所有 daemon 节点
 import Router from "@koa/router";
 import formidable from "formidable";
 import * as fs from "fs-extra";
@@ -58,6 +60,12 @@ router.put("/setting", permission({ level: ROLE.ADMIN }), async (ctx) => {
     if (config.businessMode != null) systemConfig.businessMode = Boolean(config.businessMode);
     if (config.businessId != null) systemConfig.businessId = String(config.businessId);
     if (config.allowChangeCmd != null) systemConfig.allowChangeCmd = Boolean(config.allowChangeCmd);
+    if (config.containerBackend != null) {
+      const backend = String(config.containerBackend);
+      if (backend !== "docker" && backend !== "podman") throw new Error("containerBackend must be 'docker' or 'podman'");
+      systemConfig.containerBackend = backend;
+      remoteService.changeDaemonContainerBackend(backend);
+    }
     if (config.registerCode != null) systemConfig.registerCode = String(config.registerCode);
     if (config.panelId != null) systemConfig.panelId = String(config.panelId);
 

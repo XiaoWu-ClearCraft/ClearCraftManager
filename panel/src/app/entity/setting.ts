@@ -1,3 +1,5 @@
+// Modified by XiaoWu-ClearCraft on 2026-07-19
+// 修改说明：新增 containerBackend 字段，支持在面板设置中选择容器后端
 // @Entity
 export default class SystemConfig {
   // HTTP service port, IP and path prefix
@@ -58,6 +60,9 @@ export default class SystemConfig {
 
   // Whether to allow users to edit the start & update command of Docker instances
   allowChangeCmd = false;
+
+  // Container runtime backend: "docker" or "podman"
+  containerBackend = "docker";
 
   // -----
   // After it is enabled, you can connect to the redeem.mcsmanager.com platform

@@ -1,3 +1,5 @@
+// Modified by XiaoWu-ClearCraft on 2026-07-19
+// 修改说明：节点高级配置新增容器后端选择器，支持为单个节点单独设置容器后端
 <script lang="ts" setup>
 import NodeRemoteMappingEdit from "@/components/NodeRemoteMappingEdit.vue";
 import type { ComputedNodeInfo } from "@/hooks/useOverviewInfo";
@@ -33,7 +35,8 @@ const DEFAULT_CONFIG = {
   outputBufferSize: 256,
   enableSoftShutdown: true,
   softShutdownSkipDocker: true,
-  softShutdownWaitSeconds: 10
+  softShutdownWaitSeconds: 10,
+  containerBackend: "docker"
 };
 
 const SPEED_RATE_OPTIONS = [
@@ -99,6 +102,7 @@ const openDialog = (data?: ComputedNodeInfo, uuid?: string) => {
     dialog.data = {
       ...data,
       ...data.config,
+      containerBackend: data.config?.containerBackend ?? "docker",
       port: data.port, // connection port
       daemonPort: data.config?.port ?? 24444, // listen port
       apiKey: "",
@@ -347,6 +351,21 @@ defineExpose({ openDialog });
             </a-typography-paragraph>
             <a-input v-model:value="dialog.data.daemonPort" />
           </a-form-item>
+          <a-row :gutter="16">
+            <a-col :span="12">
+              <a-form-item :label="t('TXT_CODE_CONTAINER_BACKEND')" name="containerBackend">
+                <a-typography-paragraph>
+                  <a-typography-text type="secondary">
+                    {{ t("TXT_CODE_CONTAINER_BACKEND_DESC") }}
+                  </a-typography-text>
+                </a-typography-paragraph>
+                <a-select v-model:value="dialog.data.containerBackend" style="width: 100%">
+                  <a-select-option value="docker">Docker</a-select-option>
+                  <a-select-option value="podman">Podman</a-select-option>
+                </a-select>
+              </a-form-item>
+            </a-col>
+          </a-row>
           <a-form-item :label="t('TXT_CODE_bbe23ee7')" name="remoteMappings">
             <a-typography-paragraph>
               <a-typography-text type="secondary">

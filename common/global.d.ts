@@ -185,6 +185,7 @@ declare global {
       enableSoftShutdown: boolean;
       softShutdownSkipDocker: boolean;
       softShutdownWaitSeconds: number;
+      containerBackend: string;
     };
     dockerPlatforms?: string[];
   }

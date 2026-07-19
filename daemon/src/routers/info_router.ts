@@ -1,3 +1,5 @@
+// Modified by XiaoWu-ClearCraft on 2026-07-19
+// 修改说明：info/overview 返回 containerBackend 字段，info/setting 支持更新 containerBackend
 import Instance from "../entity/instance/instance";
 import * as protocol from "../service/protocol";
 import { routerApp } from "../service/router";
@@ -57,7 +59,8 @@ routerApp.on("info/overview", async (ctx) => {
       outputBufferSize: globalConfiguration.config.outputBufferSize,
       enableSoftShutdown: globalConfiguration.config.enableSoftShutdown,
       softShutdownSkipDocker: globalConfiguration.config.softShutdownSkipDocker,
-      softShutdownWaitSeconds: globalConfiguration.config.softShutdownWaitSeconds
+      softShutdownWaitSeconds: globalConfiguration.config.softShutdownWaitSeconds,
+      containerBackend: globalConfiguration.config.containerBackend
     },
     dockerPlatforms
   };
@@ -113,6 +116,12 @@ routerApp.on("info/setting", async (ctx, data) => {
   }
   if (softShutdownWaitSeconds != null && softShutdownWaitSeconds >= 1 && softShutdownWaitSeconds <= 600) {
     globalConfiguration.config.softShutdownWaitSeconds = softShutdownWaitSeconds;
+  }
+  if (data.containerBackend != null) {
+    const backend = String(data.containerBackend);
+    if (backend === "docker" || backend === "podman") {
+      globalConfiguration.config.containerBackend = backend;
+    }
   }
   globalConfiguration.store();
   protocol.response(ctx, true);

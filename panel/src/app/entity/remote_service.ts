@@ -1,3 +1,5 @@
+// Modified by XiaoWu-ClearCraft on 2026-07-19
+// 修改说明：新增 setContainerBackend 方法，支持向 daemon 推送容器后端配置
 import { io, Socket, SocketOptions, ManagerOptions } from "socket.io-client";
 import { RemoteServiceConfig } from "./entity_interface";
 import { logger } from "../service/log";
@@ -80,6 +82,15 @@ export default class RemoteService {
     );
     return await new RemoteRequest(this).request("info/setting", {
       language
+    });
+  }
+
+  public async setContainerBackend(backend: string) {
+    logger.info(
+      `Setting container backend for daemon (${this.config.ip}:${this.config.port}/${this.config.remarks}) to: ${backend}`
+    );
+    return await new RemoteRequest(this).request("info/setting", {
+      containerBackend: backend
     });
   }
 

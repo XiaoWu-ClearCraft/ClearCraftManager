@@ -1,3 +1,5 @@
+// Modified by XiaoWu-ClearCraft on 2026-07-19
+// 修改说明：Settings 接口新增 containerBackend 字段
 /* eslint-disable no-unused-vars */
 import type { Dayjs } from "dayjs";
 import type { INSTANCE_STATUS_CODE, ScheduleCreateType } from "./const";
@@ -91,6 +93,7 @@ export interface Settings {
   businessMode: boolean;
   businessId: string;
   allowChangeCmd: boolean;
+  containerBackend: string;
   registerCode: string;
   panelId: string;
   ssoEnabled: boolean;

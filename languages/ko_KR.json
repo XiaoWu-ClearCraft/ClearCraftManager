@@ -3448,5 +3448,7 @@
   "TXT_CODE_6542489a": "예시: /dev/sda:10MB",
   "TXT_CODE_9d2e6d5e": "장치 쓰기 속도 제한 (BPS)",
   "TXT_CODE_2b2ff3ff": "컨테이너의 특정 블록 장치 쓰기 속도를 제한합니다. 형식: /dev/sda:5MB. 여러 장치는 쉼표로 구분하세요.",
-  "TXT_CODE_f0dc9eca": "예시: /dev/sda:5MB"
+  "TXT_CODE_f0dc9eca": "예시: /dev/sda:5MB",
+  "TXT_CODE_CONTAINER_BACKEND": "컨테이너 백엔드",
+  "TXT_CODE_CONTAINER_BACKEND_DESC": "컨테이너 런타임 백엔드를 선택합니다. 기본값은 Docker입니다. 데몬 노드가 Podman을 사용하는 경우 Podman으로 전환하세요."
 }

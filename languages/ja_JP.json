@@ -3448,5 +3448,7 @@
   "TXT_CODE_6542489a": "例: /dev/sda:10MB",
   "TXT_CODE_9d2e6d5e": "デバイス書き込みレート制限（BPS）",
   "TXT_CODE_2b2ff3ff": "コンテナの特定ブロックデバイスの書き込みレートを制限します。形式: /dev/sda:5MB。複数デバイスはカンマで区切ります。",
-  "TXT_CODE_f0dc9eca": "例: /dev/sda:5MB"
+  "TXT_CODE_f0dc9eca": "例: /dev/sda:5MB",
+  "TXT_CODE_CONTAINER_BACKEND": "コンテナバックエンド",
+  "TXT_CODE_CONTAINER_BACKEND_DESC": "コンテナランタイムバックエンドを選択します。デフォルトは Docker です。デーモンノードが Podman を使用している場合は Podman に切り替えてください。"
 }

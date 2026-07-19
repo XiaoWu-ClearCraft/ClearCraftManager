@@ -1,16 +1,41 @@
+// Modified by XiaoWu-ClearCraft on 2026-07-19
+// 修改说明：新增 Podman socket 路径解析，DefaultDocker/DockerManager 根据 containerBackend 配置选择对应 socket
 import Docker from "dockerode";
 import http from "http";
 import https from "https";
 import { normalizeDockerPlatform } from "mcsmanager-common";
 import { Readable } from "node:stream";
 import os from "os";
+import { globalConfiguration } from "../entity/config";
 
-function resolveDockerOptionsFromEnv(): Docker.DockerOptions {
+function resolvePodmanSocketPath(): string {
+  // Rootless Podman: $XDG_RUNTIME_DIR/podman/podman.sock
+  const xdgRuntimeDir = process.env.XDG_RUNTIME_DIR;
+  if (xdgRuntimeDir) {
+    const podmanSocket = `${xdgRuntimeDir}/podman/podman.sock`;
+    return podmanSocket;
+  }
+  // Rootful Podman
+  return "/run/podman/podman.sock";
+}
+
+function resolveDockerOptions(backend?: string): Docker.DockerOptions {
+  // DOCKER_HOST env var always takes precedence
   const dockerHost = process.env.DOCKER_HOST?.trim();
   if (dockerHost) {
     const options = parseDockerHostToDockerOptions(dockerHost);
     if (options) return options;
   }
+
+  const isPodman = backend === "podman";
+  if (isPodman) {
+    return {
+      socketPath: os.platform() === "win32"
+        ? "//./pipe/podman_engine"
+        : resolvePodmanSocketPath()
+    };
+  }
+
   return {
     socketPath: os.platform() == "win32" ? "//./pipe/docker_engine" : "/var/run/docker.sock"
   };
@@ -72,11 +97,13 @@ function parseDockerHostToDockerOptions(dockerHost: string): Docker.DockerOption
 
 export class DefaultDocker extends Docker {
   public static readonly defaultConfig: Docker.DockerOptions = {
-    ...resolveDockerOptionsFromEnv()
+    ...resolveDockerOptions()
   };
 
   constructor(p?: Docker.DockerOptions) {
-    super(Object.assign({}, DefaultDocker.defaultConfig, p ?? {}));
+    const backend = globalConfiguration?.config?.containerBackend || "docker";
+    const baseOptions = resolveDockerOptions(backend);
+    super(Object.assign({}, baseOptions, p ?? {}));
   }
 }
 
@@ -88,6 +115,11 @@ export class DockerManager {
 
   constructor(p?: any) {
     this.docker = new DefaultDocker(p);
+  }
+
+  public static resolveSocketPath(backend?: string): string {
+    const opts = resolveDockerOptions(backend || globalConfiguration?.config?.containerBackend || "docker");
+    return opts.socketPath || "";
   }
 
   public getDocker() {

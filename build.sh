@@ -3,10 +3,12 @@
 set -e
 
 BASE_PATH=$(pwd)
+OUTPUT_DIR="clearcraftmanager"
+OUTPUT_ARCHIVE="${OUTPUT_DIR}_linux_release.tar.gz"
 
 npm run preview-build
 
-rm -rf production-code
+rm -rf ${OUTPUT_DIR}
 rm -rf ./daemon/dist ./daemon/production
 rm -rf ./panel/dist ./panel/production
 
@@ -25,33 +27,76 @@ npm run build
 echo "Collecting files..."
 cd "${BASE_PATH}"
 
-mkdir production-code
-mkdir production-code/daemon
-mkdir production-code/web
-mkdir production-code/web/public
+mkdir -p ${OUTPUT_DIR}/daemon
+mkdir -p ${OUTPUT_DIR}/web
+mkdir -p ${OUTPUT_DIR}/web/public
 
-mv "${BASE_PATH}/daemon/production/app.js" "${BASE_PATH}/production-code/daemon"
-mv "${BASE_PATH}/daemon/production/app.js.map" "${BASE_PATH}/production-code/daemon"
-cp -f "${BASE_PATH}/daemon/package.json" "${BASE_PATH}/production-code/daemon/package.json"
-cp -f "${BASE_PATH}/daemon/package-lock.json" "${BASE_PATH}/production-code/daemon/package-lock.json"
+mv "${BASE_PATH}/daemon/production/app.js" "${BASE_PATH}/${OUTPUT_DIR}/daemon"
+mv "${BASE_PATH}/daemon/production/app.js.map" "${BASE_PATH}/${OUTPUT_DIR}/daemon"
+cp -f "${BASE_PATH}/daemon/package.json" "${BASE_PATH}/${OUTPUT_DIR}/daemon/package.json"
+cp -f "${BASE_PATH}/daemon/package-lock.json" "${BASE_PATH}/${OUTPUT_DIR}/daemon/package-lock.json"
 
-mv "${BASE_PATH}/panel/production/app.js" "${BASE_PATH}/production-code/web"
-mv "${BASE_PATH}/panel/production/app.js.map" "${BASE_PATH}/production-code/web"
-cp -f "${BASE_PATH}/panel/package.json" "${BASE_PATH}/production-code/web/package.json"
-cp -f "${BASE_PATH}/panel/package-lock.json" "${BASE_PATH}/production-code/web/package-lock.json"
+# Copy daemon lib (native binaries) if exists
+if [ -d "${BASE_PATH}/daemon/lib" ]; then
+  cp -r "${BASE_PATH}/daemon/lib" "${BASE_PATH}/${OUTPUT_DIR}/daemon/lib"
+fi
 
-mv "${BASE_PATH}"/frontend/dist/* "${BASE_PATH}/production-code/web/public"
+mv "${BASE_PATH}/panel/production/app.js" "${BASE_PATH}/${OUTPUT_DIR}/web"
+mv "${BASE_PATH}/panel/production/app.js.map" "${BASE_PATH}/${OUTPUT_DIR}/web"
+cp -f "${BASE_PATH}/panel/package.json" "${BASE_PATH}/${OUTPUT_DIR}/web/package.json"
+cp -f "${BASE_PATH}/panel/package-lock.json" "${BASE_PATH}/${OUTPUT_DIR}/web/package-lock.json"
+
+mv "${BASE_PATH}"/frontend/dist/* "${BASE_PATH}/${OUTPUT_DIR}/web/public"
 
 rm -rf "${BASE_PATH}/daemon/dist" "${BASE_PATH}/daemon/production"
 rm -rf "${BASE_PATH}/panel/dist" "${BASE_PATH}/panel/production"
 rm -rf "${BASE_PATH}/frontend/dist"
 
-cd "${BASE_PATH}/production-code/daemon"
+cd "${BASE_PATH}/${OUTPUT_DIR}/daemon"
 npm install --production --no-fund --no-audit
-cd "${BASE_PATH}/production-code/web"
+cd "${BASE_PATH}/${OUTPUT_DIR}/web"
 npm install --production --no-fund --no-audit
+
+cd "${BASE_PATH}"
+
+# Create start-daemon.sh
+cat > "${OUTPUT_DIR}/start-daemon.sh" << 'EOF'
+#!/bin/bash
+cd daemon || exit
+node --max-old-space-size=8192 --enable-source-maps app.js
+EOF
+
+# Create start-web.sh
+cat > "${OUTPUT_DIR}/start-web.sh" << 'EOF'
+#!/bin/bash
+cd web || exit
+node --max-old-space-size=8192 --enable-source-maps app.js
+EOF
+
+# Create install.sh
+cat > "${OUTPUT_DIR}/install.sh" << 'EOF'
+#!/bin/bash
+BASE_PATH=$(pwd)
+cd "${BASE_PATH}/daemon" && npm install --production --no-fund --no-audit
+cd "${BASE_PATH}/web" && npm install --production --no-fund --no-audit
+echo "------------"
+echo "All done!"
+echo "------------"
+EOF
+
+# Copy LICENSE
+cp -f "${BASE_PATH}/LICENSE" "${BASE_PATH}/${OUTPUT_DIR}/LICENSE"
+
+chmod +x ${OUTPUT_DIR}/start-daemon.sh
+chmod +x ${OUTPUT_DIR}/start-web.sh
+chmod +x ${OUTPUT_DIR}/install.sh
+
+# Create release archive
+echo "Packaging ${OUTPUT_ARCHIVE}..."
+tar -czf "${BASE_PATH}/${OUTPUT_ARCHIVE}" -C "${BASE_PATH}" "${OUTPUT_DIR}"
 
 echo "------------"
 echo "Compilation completed!"
-echo "Output Directory: ./production-code/"
+echo "Output Directory: ./${OUTPUT_DIR}/"
+echo "Release Archive: ./${OUTPUT_ARCHIVE}"
 echo "------------"
