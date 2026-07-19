@@ -317,6 +317,11 @@ export function useTerminal() {
         return;
       }
 
+      // Filter out terminal handshake sequences (xterm.js internal negotiation)
+      if (data.startsWith("\x1b[?")) {
+        return;
+      }
+
       if (data !== "\x03") {
         lastCtrlCTime = 0;
         return sendInput(data);
