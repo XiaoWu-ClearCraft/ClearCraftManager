@@ -1388,18 +1388,32 @@ migrate_from_mcsmanager() {
     fi
   done
 
-  # Remove existing target directory if it exists (e.g. from a previous failed install)
   if [[ -d "$new_dir" ]]; then
-    cprint yellow "Removing existing directory: $new_dir"
-    rm -rf "$new_dir"
+    cprint yellow "Target directory $new_dir already exists, merging data directories..."
+    for component in daemon web; do
+      local old_data="${old_dir}/${component}/data"
+      local new_data="${new_dir}/${component}/data"
+      if [[ -d "$old_data" ]]; then
+        if [[ -d "$new_data" ]]; then
+          cprint cyan "Merging $old_data into $new_data..."
+          cp -a "$old_data/." "$new_data/"
+        else
+          cprint cyan "Moving $old_data to $new_data..."
+          mkdir -p "$(dirname "$new_data")"
+          mv "$old_data" "$new_data"
+        fi
+      fi
+    done
+    cprint green "Data directories merged. Removing old MCSManager installation..."
+    rm -rf "$old_dir"
+  else
+    # Rename /opt/mcsmanager to /opt/clearcraftmanager
+    cprint cyan "Renaming $old_dir to $new_dir..."
+    mv "$old_dir" "$new_dir" || {
+      cprint red bold "Failed to rename $old_dir to $new_dir"
+      exit 1
+    }
   fi
-
-  # Rename /opt/mcsmanager to /opt/clearcraftmanager
-  cprint cyan "Renaming $old_dir to $new_dir..."
-  mv "$old_dir" "$new_dir" || {
-    cprint red bold "Failed to rename $old_dir to $new_dir"
-    exit 1
-  }
   cprint green "Migrated MCSManager installation to $new_dir"
 }
 
