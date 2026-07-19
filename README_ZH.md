@@ -50,10 +50,10 @@ ClearCraftManager 是一款支持分布式架构、多用户、现代化的 Web 
 
 ```bash
 # 一行命令快速安装
-sudo su -c "wget -qO- https://raw.githubusercontent.com/XiaoWu-ClearCraft/ClearCraftManager/main/setup.sh | bash"
+sudo su -c "wget -qO- https://raw.githubusercontent.com/XiaoWu-ClearCraft/ClearCraftManager/master/setup.sh | bash"
 
 # 安装后使用方法
-systemctl start mcsm-{web,daemon}
+systemctl start ccmang-{web,daemon}
 ```
 
 ### 手动安装
@@ -65,8 +65,8 @@ tar -xvf node-v20.11.0-linux-x64.tar.xz
 ln -s /opt/node-v20.11.0-linux-x64/bin/node /usr/bin/node
 ln -s /opt/node-v20.11.0-linux-x64/bin/npm /usr/bin/npm
 
-mkdir /opt/mcsmanager/
-cd /opt/mcsmanager/
+mkdir -p /opt/clearcraftmanager/
+cd /opt/clearcraftmanager/
 wget https://github.com/XiaoWu-ClearCraft/ClearCraftManager/releases/latest/download/clearcraftmanager_linux_release.tar.gz || \
 wget https://gh.xmly.dev/https://github.com/XiaoWu-ClearCraft/ClearCraftManager/releases/latest/download/clearcraftmanager_linux_release.tar.gz
 tar -zxf clearcraftmanager_linux_release.tar.gz
