@@ -84,9 +84,20 @@ while IFS= read -r url || [ -n "$url" ]; do
   [ -z "$url" ] && continue
   filename=$(basename "$url")
   echo "  Downloading $filename..."
-  wget -q --show-progress "$url" -O "${OUTPUT_DIR}/daemon/lib/$filename" || {
-    echo "  Warning: Failed to download $filename"
-  }
+  if command -v curl >/dev/null 2>&1; then
+    curl -fSL "$url" -o "${OUTPUT_DIR}/daemon/lib/$filename" || {
+      echo "  Error: Failed to download $filename"
+      exit 1
+    }
+  elif command -v wget >/dev/null 2>&1; then
+    wget -q "$url" -O "${OUTPUT_DIR}/daemon/lib/$filename" || {
+      echo "  Error: Failed to download $filename"
+      exit 1
+    }
+  else
+    echo "  Error: Neither curl nor wget found. Cannot download dependencies."
+    exit 1
+  fi
 done < "${BASE_PATH}/lib-urls.txt"
 
 # Create start-daemon.sh
