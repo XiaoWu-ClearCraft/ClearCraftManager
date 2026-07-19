@@ -381,7 +381,6 @@ export class SetupDockerContainer extends AsyncTask {
 
     logger.info(`Container Entrypoint: ${entrypoint}`);
     logger.info(`Container Start Command: ${startCmd}`);
-    logger.info(`Docker Version: ${dockerVersion}`);
     logger.info("----------------");
 
     // Check if network rate limiting is enabled
