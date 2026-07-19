@@ -13,7 +13,7 @@
 # ------------------------------------------------------------------------------
 
 # Target installation directory (can be overridden with --install-dir)
-install_dir="/opt/mcsmanager"
+install_dir="/opt/clearcraftmanager"
 
 # Primary download URL bas. Full package URL = download_base_url + package_name
 download_base_url="https://github.com/XiaoWu-ClearCraft/ClearCraftManager/releases/latest/download/"
@@ -73,18 +73,18 @@ daemon_installed_user=""
 
 # Service file locations
 # the final dir = systemd_file + {web/daemon} + ".service"
-systemd_file="/etc/systemd/system/mcsm-"
+systemd_file="/etc/systemd/system/ccmang-"
 # Optional: Override the default installation source file.
 # If --install-source is specified, the installer will use the provided
-# "mcsmanager_linux_release.tar.gz" file instead of downloading it.
+# "clearcraftmanager_linux_release.tar.gz" file instead of downloading it.
 # Only support local absolute path.
 install_source_path=""
 
 # temp path for extracted file(s)
-install_tmp_dir="/opt/mcsmanager/mcsm_abcd"
+install_tmp_dir="/opt/clearcraftmanager/mcsm_abcd"
 
 # dir name for data dir backup
-# e.g. /opt/mcsmanager/daemon/data -> /opt/mcsmanager/data_bak_data
+# e.g. /opt/clearcraftmanager/daemon/data -> /opt/clearcraftmanager/data_bak_data
 # only valid for when during an update
 backup_prefix="data_bak_"
 
@@ -979,25 +979,18 @@ prepare_user() {
 
   return 0
 }
-# Function to stop MCSM services if they exist
+# Function to stop ClearCraftManager services if they exist
 stop_mcsm_services() {
-  cprint yellow bold "Attempting to stop mcsm-web and mcsm-daemon services..."
+  cprint yellow bold "Attempting to stop ccmang-web and ccmang-daemon services..."
 
-  # Attempt to stop mcsm-web
-  cprint blue "Stopping mcsm-web..."
-  if systemctl stop mcsm-web; then
-    cprint green "mcsm-web stopped successfully."
-  else
-    cprint red bold "Warning: Failed to stop mcsm-web (may not exist or already stopped)."
-  fi
-
-  # Attempt to stop mcsm-daemon
-  cprint blue "Stopping mcsm-daemon..."
-  if systemctl stop mcsm-daemon; then
-    cprint green "mcsm-daemon stopped successfully."
-  else
-    cprint red bold "Warning: Failed to stop mcsm-daemon (may not exist or already stopped)."
-  fi
+  for svc in ccmang-web ccmang-daemon mcsm-web mcsm-daemon; do
+    cprint blue "Stopping $svc..."
+    if systemctl stop "$svc" 2>/dev/null; then
+      cprint green "$svc stopped successfully."
+    else
+      cprint yellow "Note: $svc may not exist or already stopped."
+    fi
+  done
 }
 # Prepare file & permissions before install.
 mcsm_install_prepare() {
@@ -1137,7 +1130,7 @@ EOF
 extract_component_info() {
   # DAEMON SECTION
   if [[ "$install_daemon" == true ]]; then
-    local daemon_service="mcsm-daemon.service"
+    local daemon_service="ccmang-daemon.service"
     local daemon_path="${install_dir}/daemon"
     local daemon_config_path="${daemon_path}/${daemon_key_config_subpath}"
 
@@ -1172,7 +1165,7 @@ extract_component_info() {
 
   # WEB SECTION
   if [[ "$install_web" == true ]]; then
-    local web_service="mcsm-web.service"
+    local web_service="ccmang-web.service"
     local web_path="${install_dir}/web"
     local web_config_path="${web_path}/${web_port_config_subpath}"
 
@@ -1273,23 +1266,23 @@ print_install_result() {
   cprint yellow noprefix "Service Management Commands:"
   if [[ "$install_daemon" == true ]]; then
     cprint white noprefix nonl "  systemctl start   "
-	cprint yellow noprefix "mcsm-daemon.service"
+	cprint yellow noprefix "ccmang-daemon.service"
     cprint white noprefix nonl "  systemctl stop    "
-    cprint yellow noprefix "mcsm-daemon.service"
+    cprint yellow noprefix "ccmang-daemon.service"
     cprint white noprefix nonl "  systemctl restart "
-    cprint yellow noprefix "mcsm-daemon.service"
+    cprint yellow noprefix "ccmang-daemon.service"
     cprint white noprefix nonl "  systemctl status  "
-    cprint yellow noprefix "mcsm-daemon.service"
+    cprint yellow noprefix "ccmang-daemon.service"
   fi
   if [[ "$install_web" == true ]]; then
     cprint white noprefix nonl "  systemctl start   "
-	cprint yellow noprefix "mcsm-web.service"
+	cprint yellow noprefix "ccmang-web.service"
     cprint white noprefix nonl "  systemctl stop    "
-    cprint yellow noprefix "mcsm-web.service"
+    cprint yellow noprefix "ccmang-web.service"
     cprint white noprefix nonl "  systemctl restart "
-    cprint yellow noprefix "mcsm-web.service"
+    cprint yellow noprefix "ccmang-web.service"
     cprint white noprefix nonl "  systemctl status  "
-    cprint yellow noprefix "mcsm-web.service"
+    cprint yellow noprefix "ccmang-web.service"
   fi
   echo ""
 
@@ -1341,7 +1334,7 @@ install_mcsm() {
     systemctl daemon-reload
 
     for comp in "${components[@]}"; do
-      local svc="mcsm-${comp}.service"
+      local svc="ccmang-${comp}.service"
 
       cprint cyan "Enabling service: $svc"
       if systemctl enable "$svc" &>/dev/null; then
@@ -1362,6 +1355,48 @@ install_mcsm() {
   
 }
 
+# Migrate from old MCSManager installation
+migrate_from_mcsmanager() {
+  local old_dir="/opt/mcsmanager"
+  local new_dir="${install_dir}"
+
+  if [[ ! -d "$old_dir" ]]; then
+    return 0
+  fi
+
+  if [[ "$old_dir" == "$new_dir" ]]; then
+    return 0
+  fi
+
+  cprint yellow bold "Detected existing MCSManager installation at $old_dir"
+  cprint cyan "Migrating to ClearCraftManager..."
+
+  # Stop old services
+  for svc in mcsm-web mcsm-daemon; do
+    if systemctl stop "$svc" 2>/dev/null; then
+      cprint green "Stopped old service: $svc"
+    fi
+  done
+
+  # Remove old systemd service files
+  for svc in mcsm-web.service mcsm-daemon.service; do
+    local svc_path="/etc/systemd/system/$svc"
+    if [[ -f "$svc_path" ]]; then
+      systemctl disable "$svc" 2>/dev/null || true
+      rm -f "$svc_path"
+      cprint green "Removed old service file: $svc_path"
+    fi
+  done
+
+  # Rename /opt/mcsmanager to /opt/clearcraftmanager
+  cprint cyan "Renaming $old_dir to $new_dir..."
+  mv "$old_dir" "$new_dir" || {
+    cprint red bold "Failed to rename $old_dir to $new_dir"
+    exit 1
+  }
+  cprint green "Migrated MCSManager installation to $new_dir"
+}
+
 main() {
   trap 'echo "Unexpected error occurred."; exit 99' ERR
   safe_run detect_terminal_capabilities "Failed to detect terminal capabilities"
@@ -1379,6 +1414,8 @@ main() {
   if [ "$install_node" = true ]; then
     safe_run install_node "Node.js installation failed"
   fi
+
+  safe_run migrate_from_mcsmanager "Failed to migrate from MCSManager"
 
   safe_run permission_barrier "Permission validation failed — aborting install"
 

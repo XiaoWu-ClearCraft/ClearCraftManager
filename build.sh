@@ -6,6 +6,23 @@ BASE_PATH=$(pwd)
 OUTPUT_DIR="clearcraftmanager"
 OUTPUT_ARCHIVE="${OUTPUT_DIR}_linux_release.tar.gz"
 
+# If version arguments are provided, update package.json versions
+if [ -n "$1" ]; then
+  WEB_VERSION="$1"
+  echo "Setting web version to ${WEB_VERSION}..."
+  sed -i "s/\"version\": \".*\"/\"version\": \"${WEB_VERSION}\"/" "${BASE_PATH}/panel/package.json"
+else
+  WEB_VERSION=$(grep '"version"' "${BASE_PATH}/panel/package.json" | sed 's/.*"version": "\(.*\)".*/\1/')
+fi
+
+if [ -n "$2" ]; then
+  DAEMON_VERSION="$2"
+  echo "Setting daemon version to ${DAEMON_VERSION}..."
+  sed -i "s/\"version\": \".*\"/\"version\": \"${DAEMON_VERSION}\"/" "${BASE_PATH}/daemon/package.json"
+else
+  DAEMON_VERSION=$(grep '"version"' "${BASE_PATH}/daemon/package.json" | sed 's/.*"version": "\(.*\)".*/\1/')
+fi
+
 npm run preview-build
 
 rm -rf ${OUTPUT_DIR}
@@ -97,6 +114,8 @@ tar -czf "${BASE_PATH}/${OUTPUT_ARCHIVE}" -C "${BASE_PATH}" "${OUTPUT_DIR}"
 
 echo "------------"
 echo "Compilation completed!"
+echo "Web Version: ${WEB_VERSION}"
+echo "Daemon Version: ${DAEMON_VERSION}"
 echo "Output Directory: ./${OUTPUT_DIR}/"
 echo "Release Archive: ./${OUTPUT_ARCHIVE}"
 echo "------------"
