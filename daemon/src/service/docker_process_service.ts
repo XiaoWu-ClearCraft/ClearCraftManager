@@ -372,10 +372,8 @@ export class SetupDockerContainer extends AsyncTask {
     let entrypoint: string | string[] | undefined = commandList.length ? commandList[0] : undefined;
     const startCmd = commandList.length > 1 ? commandList.slice(1) : undefined;
 
-    // Compatible with Docker API v29+: Entrypoint must be an array type
-    const { Version: dockerVersion } = await docker.version();
-    const versionNum = dockerVersion.split(".")[0];
-    if (Number(versionNum.replace("v", "")) >= 29 && entrypoint !== undefined) {
+    // Entrypoint must always be an array for Docker/Podman API compatibility
+    if (entrypoint !== undefined) {
       entrypoint = [entrypoint];
     }
 
