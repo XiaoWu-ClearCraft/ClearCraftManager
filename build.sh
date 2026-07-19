@@ -19,6 +19,7 @@ if [ -n "$2" ]; then
   DAEMON_VERSION="$2"
   echo "Setting daemon version to ${DAEMON_VERSION}..."
   sed -i "s/\"version\": \".*\"/\"version\": \"${DAEMON_VERSION}\"/" "${BASE_PATH}/daemon/package.json"
+  sed -i "s/\"daemonVersion\": \".*\"/\"daemonVersion\": \"${DAEMON_VERSION}\"/" "${BASE_PATH}/panel/package.json"
 else
   DAEMON_VERSION=$(grep '"version"' "${BASE_PATH}/daemon/package.json" | sed 's/.*"version": "\(.*\)".*/\1/')
 fi
