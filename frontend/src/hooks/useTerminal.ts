@@ -317,11 +317,6 @@ export function useTerminal() {
         return;
       }
 
-      // Filter out terminal handshake sequences (xterm.js internal negotiation)
-      if (data.startsWith("\x1b[?")) {
-        return;
-      }
-
       if (data !== "\x03") {
         lastCtrlCTime = 0;
         return sendInput(data);
@@ -345,10 +340,16 @@ export function useTerminal() {
   };
 
   events.on("stdout", (v: StdoutData) => {
+    const text = v.text
+      .replace(/\x1b\[c/g, "")      // Device Attributes request
+      .replace(/\x1b\[0c/g, "")     // Device Attributes request (alt)
+      .replace(/\x1b\[6n/g, "")     // Cursor Position Report request
+      .replace(/\x1b\[>c/g, "")     // Secondary Device Attributes request
+      .replace(/\x1b\][0-9;]+[\x07\x1b]/g, ""); // OSC sequences
     if (state.value?.config?.terminalOption?.haveColor) {
-      terminal.value?.write(encodeConsoleColor(v.text));
+      terminal.value?.write(encodeConsoleColor(text));
     } else {
-      terminal.value?.write(v.text);
+      terminal.value?.write(text);
     }
   });
 
