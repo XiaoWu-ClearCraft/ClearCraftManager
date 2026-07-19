@@ -1401,6 +1401,7 @@ main() {
   trap 'echo "Unexpected error occurred."; exit 99' ERR
   safe_run detect_terminal_capabilities "Failed to detect terminal capabilities"
   safe_run check_root "Script must be run as root"
+  safe_run migrate_from_mcsmanager "Failed to migrate from MCSManager"
   safe_run parse_args "Failed to parse arguments" "$@"
   safe_run detect_os_info "Failed to detect OS"
   safe_run version_specific_rules "Failed to apply distro/version specific rules"
@@ -1414,8 +1415,6 @@ main() {
   if [ "$install_node" = true ]; then
     safe_run install_node "Node.js installation failed"
   fi
-
-  safe_run migrate_from_mcsmanager "Failed to migrate from MCSManager"
 
   safe_run permission_barrier "Permission validation failed — aborting install"
 
