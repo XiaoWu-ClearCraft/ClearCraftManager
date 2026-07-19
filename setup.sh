@@ -1388,6 +1388,12 @@ migrate_from_mcsmanager() {
     fi
   done
 
+  # Remove existing target directory if it exists (e.g. from a previous failed install)
+  if [[ -d "$new_dir" ]]; then
+    cprint yellow "Removing existing directory: $new_dir"
+    rm -rf "$new_dir"
+  fi
+
   # Rename /opt/mcsmanager to /opt/clearcraftmanager
   cprint cyan "Renaming $old_dir to $new_dir..."
   mv "$old_dir" "$new_dir" || {
