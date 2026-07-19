@@ -575,7 +575,11 @@ export class DockerProcessAdapter extends EventEmitter implements IInstanceProce
         stdin: true,
         hijack: true
       });
-      this.stream.on("data", (data) => this.emit("data", data));
+      this.stream.on("data", (data) => {
+        // Podman may echo the attach request body back as stdin data; filter it out
+        if (typeof data === "string" && data.startsWith('{"stream":true')) return;
+        this.emit("data", data);
+      });
       this.stream.on("error", (data) => this.emit("data", data));
       this.wait();
     } catch (error: any) {
