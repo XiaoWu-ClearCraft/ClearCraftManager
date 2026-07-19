@@ -79,7 +79,8 @@ cd "${BASE_PATH}"
 # Download native binary dependencies (PTY, Zip-Tools, 7z)
 echo "Downloading native binary dependencies..."
 mkdir -p "${OUTPUT_DIR}/daemon/lib"
-while IFS= read -r url; do
+while IFS= read -r url || [ -n "$url" ]; do
+  url=$(echo "$url" | tr -d '\r\n')
   [ -z "$url" ] && continue
   filename=$(basename "$url")
   echo "  Downloading $filename..."
