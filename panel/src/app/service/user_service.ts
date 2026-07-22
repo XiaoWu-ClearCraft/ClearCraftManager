@@ -52,6 +52,7 @@ class UserSubsystem {
     if (config.ssoSub != null) instance.ssoSub = String(config.ssoSub);
     if (config.ssoBound != null) instance.ssoBound = Boolean(config.ssoBound);
     if (config.instances) this.setUserInstances(uuid, config.instances);
+    if (config.tags) this.setUserTags(uuid, config.tags);
     if (config.passWord) {
       instance.passWordType = UserPassWordType.bcrypt;
       instance.passWord = bcrypt.hashSync(config.passWord, 10);
@@ -115,6 +116,12 @@ class UserSubsystem {
         daemonId: String(value.daemonId)
       });
     });
+  }
+
+  setUserTags(uuid: string, tags: string[]) {
+    const user = this.getInstance(uuid);
+    if (!user) return;
+    user.tags = tags.map((t) => String(t).trim()).filter((t) => t.length > 0);
   }
   deleteUserInstances(uuid: string | null, instanceIds: IUserApp[], allUsers = false) {
     if (uuid && allUsers) {

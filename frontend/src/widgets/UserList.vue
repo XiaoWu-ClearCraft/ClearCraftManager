@@ -256,6 +256,7 @@ const formDataOrigin: EditUserInfo = {
   loginTime: "",
   registerTime: "",
   instances: [],
+  tags: [],
   permission: 1,
   apiKey: "",
   isInit: false,

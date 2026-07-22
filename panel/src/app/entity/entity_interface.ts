@@ -22,6 +22,7 @@ export interface IUser {
   registerTime?: string;
   loginTime?: string;
   instances?: Array<any>;
+  tags?: string[];
   isInit?: boolean;
   passWordType?: number;
   secret?: string;
@@ -35,6 +36,7 @@ export interface ICompleteUser {
   userName: string;
   permission: number;
   instances: Array<any>;
+  tags: string[];
   registerTime: string;
   loginTime: string;
 }

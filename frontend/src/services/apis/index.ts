@@ -203,6 +203,21 @@ export const updateUserInstance = useDefineApi<
   method: "PUT"
 });
 
+export const updateUserTags = useDefineApi<
+  {
+    data: {
+      config: {
+        tags: string[];
+      };
+      uuid: string;
+    };
+  },
+  boolean
+>({
+  url: "/api/auth",
+  method: "PUT"
+});
+
 export const overviewInfo = useDefineApi<any, IPanelOverviewResponse>({
   url: "/api/overview"
 });

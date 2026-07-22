@@ -21,6 +21,7 @@ export class User implements IUser {
   registerTime: string = "";
   loginTime: string = "";
   instances: Array<IUserApp> = [];
+  tags: string[] = [];
   apiKey: string = "";
   isInit: boolean = false;
   secret = "";

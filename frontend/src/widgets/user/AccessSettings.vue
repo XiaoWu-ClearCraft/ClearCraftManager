@@ -7,9 +7,9 @@ import { t } from "@/lang/i18n";
 import BetweenMenus from "@/components/BetweenMenus.vue";
 import { useScreen } from "@/hooks/useScreen";
 import { arrayFilter } from "@/tools/array";
-import { userInfoApiAdvanced } from "@/services/apis";
+import { userInfoApiAdvanced, remoteInstances } from "@/services/apis";
 import { useLayoutCardTools } from "@/hooks/useCardTools";
-import { updateUserInstance } from "@/services/apis";
+import { updateUserInstance, updateUserTags } from "@/services/apis";
 import { useSelectInstances } from "@/components/fc";
 import { message } from "ant-design-vue";
 import { reportErrorMsg } from "@/tools/validator";
@@ -18,6 +18,8 @@ import type { AntColumnsType, AntTableCell } from "@/types/ant";
 import dayjs from "dayjs";
 import WarningDialog from "@/components/fc/WarningDialog.vue";
 import { useMountComponent } from "@/hooks/useMountComponent";
+import { useInstanceTagTips } from "@/hooks/useInstanceTag";
+import { TagsOutlined, PlusOutlined } from "@ant-design/icons-vue";
 
 const props = defineProps<{
   card: LayoutCard;
@@ -27,6 +29,9 @@ const props = defineProps<{
 const { isPhone } = useScreen();
 
 const dataSource = ref<UserInstance[]>([]);
+const userTags = ref<string[]>([]);
+const allTagOptions = ref<string[]>([]);
+const newTagInput = ref("");
 const { getMetaOrRouteValue } = useLayoutCardTools(props.card);
 const userUuid = getMetaOrRouteValue("uuid");
 
@@ -113,10 +118,59 @@ async function refreshTableData() {
     newDataSource.push(instance);
   }
   dataSource.value = newDataSource;
+  userTags.value = rawUserInfo.tags || [];
 }
 
+// Tag management
+const { execute: getInstances, state: instances } = remoteInstances();
+
+const loadAllTags = async () => {
+  const allTags = new Set<string>();
+  // Collect tags from already loaded instances
+  for (const inst of dataSource.value) {
+    if (inst.config?.tag) {
+      for (const tag of inst.config.tag) {
+        allTags.add(tag);
+      }
+    }
+  }
+  allTagOptions.value = Array.from(allTags).sort();
+};
+
+const addUserTag = async () => {
+  const tag = newTagInput.value.trim();
+  if (!tag) return;
+  if (!userTags.value.includes(tag)) {
+    userTags.value.push(tag);
+    userTags.value.sort();
+  }
+  newTagInput.value = "";
+  await saveUserTags();
+};
+
+const removeUserTag = async (tag: string) => {
+  userTags.value = userTags.value.filter((t) => t !== tag);
+  await saveUserTags();
+};
+
+const saveUserTags = async () => {
+  try {
+    await updateUserTags().execute({
+      data: {
+        config: {
+          tags: userTags.value
+        },
+        uuid: <string>userUuid
+      }
+    });
+    message.success(t("TXT_CODE_d3de39b4"));
+  } catch (err: any) {
+    reportErrorMsg(err.message);
+  }
+};
+
 onMounted(() => {
-  refreshTableData();
+  refreshTableData().then(() => loadAllTags());
 });
 
 const columns = computed(() => {
@@ -195,6 +249,42 @@ const columns = computed(() => {
         </BetweenMenus>
       </a-col>
 
+      <!-- Tag-based permission section -->
+      <a-col :span="24">
+        <CardPanel>
+          <template #body>
+            <a-typography-title :level="5">
+              <TagsOutlined />
+              {{ t("TXT_CODE_a2544278") }}
+            </a-typography-title>
+            <a-typography-paragraph>
+              <a-typography-text type="secondary">
+                {{ t("TXT_CODE_eaabd222") }}
+              </a-typography-text>
+            </a-typography-paragraph>
+            <div class="tag-container">
+              <a-tag
+                v-for="tag in userTags"
+                :key="tag"
+                color="blue"
+                closable
+                @close="() => removeUserTag(tag)"
+              >
+                {{ tag }}
+              </a-tag>
+              <a-input
+                v-model:value="newTagInput"
+                placeholder="+"
+                style="width: 72px; display: inline-block"
+                size="small"
+                @press-enter="addUserTag"
+                @blur="addUserTag"
+              />
+            </div>
+          </template>
+        </CardPanel>
+      </a-col>
+
       <a-col :span="24">
         <CardPanel class="h-100">
           <template #body>
@@ -233,5 +323,12 @@ const columns = computed(() => {
 
 .search-input:hover {
   width: 100%;
+}
+
+.tag-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 }
 </style>

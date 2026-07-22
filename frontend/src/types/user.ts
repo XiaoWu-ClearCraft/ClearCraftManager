@@ -13,6 +13,7 @@ export interface BaseUserInfo {
   loginTime: string;
   registerTime: string;
   instances: UserInstance[];
+  tags: string[];
   permission: number;
   apiKey: string;
   isInit: boolean;

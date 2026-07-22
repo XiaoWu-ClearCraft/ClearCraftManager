@@ -15,7 +15,8 @@ import {
   PlayCircleOutlined,
   RedoOutlined,
   SearchOutlined,
-  WarningOutlined
+  WarningOutlined,
+  TagsOutlined
 } from "@ant-design/icons-vue";
 import { computed, h, onMounted, ref } from "vue";
 
@@ -30,7 +31,8 @@ import {
   batchRestart,
   batchStart,
   batchStop,
-  getInstanceInfo
+  getInstanceInfo,
+  updateInstanceConfig
 } from "@/services/apis/instance";
 import { reportErrorMsg } from "@/tools/validator";
 import type { AntColumnsType } from "@/types/ant";
@@ -84,6 +86,125 @@ const instancesMoreInfo = computed(() => {
   }
   return newInstances || [];
 });
+
+// Drag state
+const draggedInstanceId = ref<string | null>(null);
+const dragOverInstanceId = ref<string | null>(null);
+
+// Tag-grouped sections for rendering
+interface TagSection {
+  type: "tag" | "untagged";
+  tag?: string;
+  tagDisplay?: string;
+  instances: InstanceMoreDetail[];
+}
+
+const tagSections = computed<TagSection[]>(() => {
+  const sections: TagSection[] = [];
+  const allInstances = instancesMoreInfo.value;
+  const activeTag = selectedTags.value.length > 0 ? selectedTags.value[0] : null;
+
+  if (activeTag) {
+    const tagged = allInstances.filter((inst) => {
+      const tags = inst.config?.tag || [];
+      return tags.includes(activeTag);
+    });
+    if (tagged.length > 0) {
+      sections.push({ type: "tag", tag: activeTag, tagDisplay: activeTag, instances: tagged });
+    }
+    return sections;
+  }
+
+  // Collect all distinct tags
+  const allTagsSet = new Set<string>();
+  const instTagsMap = new Map<string, string[]>();
+  for (const inst of allInstances) {
+    const tags = inst.config?.tag || [];
+    instTagsMap.set(inst.instanceUuid, tags);
+    for (const tag of tags) allTagsSet.add(tag);
+  }
+
+  // Tag sections
+  const sortedTags = Array.from(allTagsSet).sort();
+  const handledUuids = new Set<string>();
+  for (const tag of sortedTags) {
+    const tagged = allInstances.filter((inst) => {
+      const tags = inst.config?.tag || [];
+      return tags.includes(tag);
+    });
+    if (tagged.length > 0) {
+      for (const inst of tagged) handledUuids.add(inst.instanceUuid);
+      sections.push({ type: "tag", tag, tagDisplay: tag, instances: tagged });
+    }
+  }
+
+  // Untagged section
+  const untagged = allInstances.filter((inst) => {
+    const tags = inst.config?.tag || [];
+    return tags.length === 0;
+  });
+  if (untagged.length > 0) {
+    sections.push({ type: "untagged", tagDisplay: "未分类（无标签）", instances: untagged });
+  }
+
+  return sections;
+});
+
+// Drag reorder within a section
+const onCardDragStart = (instanceId: string, event: DragEvent) => {
+  draggedInstanceId.value = instanceId;
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", instanceId);
+  }
+};
+
+const onCardDragOver = (instanceId: string, event: DragEvent) => {
+  event.preventDefault();
+  if (draggedInstanceId.value && draggedInstanceId.value !== instanceId) {
+    dragOverInstanceId.value = instanceId;
+  }
+};
+
+const onCardDragLeave = () => {
+  dragOverInstanceId.value = null;
+};
+
+const onCardDrop = async (targetInstanceId: string, ev: DragEvent) => {
+  ev.preventDefault();
+  const srcId = draggedInstanceId.value;
+  dragOverInstanceId.value = null;
+  draggedInstanceId.value = null;
+  if (!srcId || srcId === targetInstanceId) return;
+
+  // Find source and target instances
+  const allInstances = instancesMoreInfo.value;
+  const srcIdx = allInstances.findIndex((i) => i.instanceUuid === srcId);
+  const dstIdx = allInstances.findIndex((i) => i.instanceUuid === targetInstanceId);
+  if (srcIdx === -1 || dstIdx === -1) return;
+
+  // Rebuild order
+  const reordered = [...allInstances];
+  const [moved] = reordered.splice(srcIdx, 1);
+  reordered.splice(dstIdx, 0, moved);
+
+  // Save new order values
+  const daemonId = currentRemoteNode.value?.uuid || "";
+  for (let i = 0; i < reordered.length; i++) {
+    const inst = reordered[i];
+    if (inst.config?.order !== i) {
+      try {
+        await updateInstanceConfig().execute({
+          params: { uuid: inst.instanceUuid, daemonId },
+          data: { order: i }
+        });
+      } catch (err) {
+        console.error("Failed to update order", err);
+      }
+    }
+  }
+  await initInstancesData();
+};
 
 const initNodes = async () => {
   await getNodes();
@@ -702,7 +823,7 @@ onMounted(async () => {
             :key="item"
             class="group-name-tag"
             :class="{ 'group-name-tag-active': isTagSelected(item) }"
-            @click="isTagSelected(item) ? removeTag(item) : selectTag(item)"
+            @click="selectTag(item)"
           >
             {{ item }}
           </a-tag>
@@ -712,30 +833,51 @@ onMounted(async () => {
         <Loading></Loading>
       </a-col>
 
-      <a-col v-else-if="!isGlobalDaemonMode && instancesMoreInfo?.length > 0" :span="24">
-        <a-row :gutter="[16, 16]">
-          <fade-up-animation>
-            <a-col
-              v-for="item in instancesMoreInfo"
-              :key="item.instanceUuid"
-              :span="24"
-              :xl="6"
-              :lg="8"
-              :sm="12"
-            >
-              <Shortcut
-                class="instance-card"
-                :class="{ selected: multipleMode && findInstance(item) }"
-                style="height: 100%"
-                :card="card"
-                :target-instance-info="item"
-                :target-daemon-id="currentRemoteNode?.uuid"
-                @click="handleSelectInstance(item)"
-                @refresh-list="initInstancesData()"
-              />
-            </a-col>
-          </fade-up-animation>
-        </a-row>
+      <!-- Tag-grouped card grid -->
+      <a-col v-else-if="!isGlobalDaemonMode && tagSections.length > 0" :span="24">
+        <template v-for="section in tagSections" :key="section.tag || 'untagged'">
+          <!-- Section header -->
+          <div class="tag-section-header">
+            <TagsOutlined v-if="section.type === 'tag'" />
+            <span class="tag-section-title">{{ section.tagDisplay }}</span>
+          </div>
+          <!-- Card grid -->
+          <a-row :gutter="[16, 16]" class="tag-section-grid">
+            <fade-up-animation>
+              <a-col
+                v-for="item in section.instances"
+                :key="item.instanceUuid + (section.tag || 'untagged')"
+                :span="24"
+                :xl="6"
+                :lg="8"
+                :sm="12"
+              >
+                <div
+                  :draggable="!multipleMode"
+                  class="instance-card-drag-wrapper"
+                  :class="{
+                    'drag-over-border': dragOverInstanceId === item.instanceUuid && draggedInstanceId !== item.instanceUuid
+                  }"
+                  @dragstart="onCardDragStart(item.instanceUuid, $event)"
+                  @dragover="onCardDragOver(item.instanceUuid, $event)"
+                  @dragleave="onCardDragLeave"
+                  @drop="onCardDrop(item.instanceUuid, $event)"
+                >
+                  <Shortcut
+                    class="instance-card"
+                    :class="{ selected: multipleMode && findInstance(item) }"
+                    style="height: 100%"
+                    :card="card"
+                    :target-instance-info="item"
+                    :target-daemon-id="currentRemoteNode?.uuid"
+                    @click="handleSelectInstance(item)"
+                    @refresh-list="initInstancesData()"
+                  />
+                </div>
+              </a-col>
+            </fade-up-animation>
+          </a-row>
+        </template>
       </a-col>
 
       <a-col v-else-if="isGlobalDaemonMode" :span="24">
@@ -850,5 +992,45 @@ onMounted(async () => {
     border-color: var(--color-green-3);
     color: var(--color-green-7);
   }
+}
+
+.tag-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 4px 8px 4px;
+  margin-top: 8px;
+  border-bottom: 2px solid var(--color-gray-4);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-gray-8);
+}
+
+.tag-section-grid {
+  margin-top: 12px;
+}
+
+.instance-card-drag-wrapper {
+  transition: all 0.2s ease;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.drag-over-border .instance-card {
+  border: 2px dashed var(--color-blue-5) !important;
+  opacity: 0.8;
+}
+
+.instance-card {
+  cursor: pointer;
+  min-height: 170px;
+  transition: border 0.3s ease;
+}
+.instance-card:hover {
+  border: 1px solid var(--color-gray-8);
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.16);
 }
 </style>

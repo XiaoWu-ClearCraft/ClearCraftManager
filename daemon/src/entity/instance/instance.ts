@@ -185,6 +185,10 @@ export default class Instance extends EventEmitter {
       this.config.tag = cfg.tag;
     }
 
+    if (cfg.order != null) {
+      this.config.order = Number(cfg.order);
+    }
+
     if (cfg?.extraServiceConfig) {
       configureEntityParams(
         this.config.extraServiceConfig,

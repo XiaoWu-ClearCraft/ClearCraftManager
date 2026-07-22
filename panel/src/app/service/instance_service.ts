@@ -77,12 +77,17 @@ export async function getInstancesByUuid(
   // Advanced functions are optional, analyze each instance data
   let resInstances: IAdvancedInstanceInfo[] = [];
   if (advanced) {
+    // Track which instances we've already added (by instanceUuid)
+    const addedUuids = new Set<string>();
+
+    // 1. Get instances explicitly assigned to user
     const instances = user.instances;
     for (const iterator of instances) {
       if (targetDaemonId && targetDaemonId !== iterator.daemonId) continue;
+      if (addedUuids.has(iterator.instanceUuid)) continue;
+      addedUuids.add(iterator.instanceUuid);
       const remoteService = RemoteServiceSubsystem.getInstance(iterator.daemonId);
       if (!remoteService || !remoteService.available) {
-        // If the remote service doesn't exist at all, load a deleted prompt
         resInstances.push({
           hostIp: "-- Unknown --",
           instanceUuid: iterator.instanceUuid,
@@ -101,7 +106,6 @@ export async function getInstancesByUuid(
         });
         continue;
       }
-      // Note: UUID can be integrated here to save the returned traffic, and this optimization will not be done for the time being
       try {
         let instancesInfo = await new RemoteRequest(remoteService).request("instance/section", {
           instanceUuids: [iterator.instanceUuid]
@@ -125,14 +129,49 @@ export async function getInstancesByUuid(
           info: instancesInfo.info || {}
         });
       } catch (error) {
-        // ignore error
         continue;
+      }
+    }
+
+    // 2. Get instances via tag permissions
+    if (user.tags && user.tags.length > 0) {
+      for (const [serviceUuid, remoteService] of RemoteServiceSubsystem.services.entries()) {
+        if (targetDaemonId && targetDaemonId !== serviceUuid) continue;
+        if (!remoteService || !remoteService.available) continue;
+        try {
+          const allInstances = await new RemoteRequest(remoteService).request("instance/overview");
+          if (!allInstances || !(allInstances instanceof Array)) continue;
+          for (const inst of allInstances) {
+            if (addedUuids.has(inst.instanceUuid)) continue;
+            if (!inst.config || !inst.config.tag) continue;
+            const matchedTag = inst.config.tag.some((t: string) => user.tags.includes(t));
+            if (!matchedTag) continue;
+            addedUuids.add(inst.instanceUuid);
+            resInstances.push({
+              hostIp: `${remoteService.config.ip}:${remoteService.config.port}`,
+              remarks: remoteService.config.remarks,
+              instanceUuid: inst.instanceUuid,
+              daemonId: remoteService.uuid,
+              status: inst.status,
+              nickname: inst.config.nickname,
+              ie: inst.config.ie,
+              oe: inst.config.oe,
+              endTime: inst.config.endTime,
+              lastDatetime: inst.config.lastDatetime,
+              stopCommand: inst.config.stopCommand,
+              processType: inst.config.processType,
+              docker: inst.config.docker || {},
+              info: inst.info || {}
+            });
+          }
+        } catch (error) {
+          continue;
+        }
       }
     }
   } else {
     resInstances = user.instances;
   }
-  // respond to user data
   return {
     uuid: user.uuid,
     userName: user.userName,

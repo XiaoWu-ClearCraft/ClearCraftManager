@@ -170,6 +170,7 @@ export const defaultInstanceInfo: IGlobalInstanceConfig = {
   lastDatetime: 0,
   type: TYPE_UNIVERSAL,
   tag: [],
+  order: 0,
   endTime: 0,
   fileCode: "UTF-8",
   processType: "general",

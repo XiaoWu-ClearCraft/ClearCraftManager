@@ -11,6 +11,7 @@ declare global {
     lastDatetime: number;
     type: string;
     tag: string[];
+    order: number;
     endTime: number;
     fileCode: string;
     processType: ProcessType;

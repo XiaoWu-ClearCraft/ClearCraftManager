@@ -76,10 +76,12 @@ routerApp.on("instance/select", (ctx, data) => {
     }
     return true;
   });
-  // sort first by status， then by nickname
+  // sort by order field (for drag-reorder), then by nickname as fallback
   result.sort((a, b) => {
-    if (a.status() !== b.status()) {
-      return b.status() - a.status();
+    const orderA = a.config.order ?? 0;
+    const orderB = b.config.order ?? 0;
+    if (orderA !== orderB) {
+      return orderA - orderB;
     }
     return a.config.nickname >= b.config.nickname ? 1 : -1;
   });

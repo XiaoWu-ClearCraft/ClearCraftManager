@@ -39,6 +39,7 @@ router.get(
         userName: user.userName,
         permission: user.permission,
         instances: user.instances,
+        tags: user.tags,
         loginTime: user.loginTime,
         registerTime: user.loginTime
       });

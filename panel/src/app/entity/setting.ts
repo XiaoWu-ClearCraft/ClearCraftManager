@@ -61,8 +61,13 @@ export default class SystemConfig {
   // Whether to allow users to edit the start & update command of Docker instances
   allowChangeCmd = false;
 
-  // Container runtime backend: "docker" or "podman"
+// Container runtime backend: "docker" or "podman"
   containerBackend = "docker";
+
+  // This option determines whether the entire panel can use an API key.
+  // If set to fail, even if the user has already generated an API key,
+  // they will no longer be able to use it.
+  enableApiKey = false;
 
   // -----
   // After it is enabled, you can connect to the redeem.mcsmanager.com platform

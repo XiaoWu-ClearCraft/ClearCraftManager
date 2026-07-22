@@ -146,6 +146,7 @@ export const updateInstanceConfig = useDefineApi<
       ie?: string;
       oe?: string;
       tag?: string[];
+      order?: number;
       stopCommand?: string;
       eventTask?: {
         autoRestart: boolean;

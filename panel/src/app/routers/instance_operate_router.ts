@@ -12,6 +12,7 @@ import { timeUuid } from "../service/password";
 import { isHaveInstanceByUuid, isTopPermissionByUuid } from "../service/permission_service";
 import RemoteRequest, { RemoteRequestTimeoutError } from "../service/remote_command";
 import RemoteServiceSubsystem from "../service/remote_service";
+import userSystem from "../service/user_service";
 import { systemConfig } from "../setting";
 
 const router = new Router({ prefix: "/protected_instance" });
@@ -22,11 +23,31 @@ router.use(async (ctx, next) => {
   const daemonId = String(ctx.query.daemonId);
   const userUuid = getUserUuid(ctx);
   if (isHaveInstanceByUuid(userUuid, daemonId, instanceUuid)) {
-    await next();
-  } else {
-    ctx.status = 403;
-    ctx.body = $t("TXT_CODE_permission.forbiddenInstance");
+    return await next();
   }
+  // Check tag-based permission asynchronously
+  const user = userSystem.getInstance(userUuid);
+  if (user && user.tags && user.tags.length > 0) {
+    try {
+      const remoteService = RemoteServiceSubsystem.getInstance(daemonId);
+      if (remoteService && remoteService.available) {
+        const detail = await new RemoteRequest(remoteService).request("instance/detail", {
+          instanceUuid
+        });
+        if (detail && detail.config && detail.config.tag) {
+          for (const tag of detail.config.tag) {
+            if (user.tags.includes(tag)) {
+              return await next();
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+  ctx.status = 403;
+  ctx.body = $t("TXT_CODE_permission.forbiddenInstance");
 });
 
 // [Low-level Permission]
@@ -423,6 +444,8 @@ router.put(
       let advancedConfig = {};
       advancedConfig = checkInstanceAdvancedParams(config, isTopPermission);
 
+      const instanceOrder = config.order != null ? toNumber(config.order) : null;
+
       await new RemoteRequest(remoteService).request("instance/update", {
         instanceUuid,
         config: {
@@ -439,6 +462,7 @@ router.put(
           rconPassword,
           enableRcon,
           tag: instanceTags,
+          order: instanceOrder,
           fileCode,
           ...advancedConfig
         }

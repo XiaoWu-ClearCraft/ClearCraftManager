@@ -76,8 +76,13 @@ export function useInstanceTagSearch() {
   const tags = ref<string[]>([]);
   let searchFn: Function = () => {};
 
+  // Single-select: selecting a tag replaces previous selection
   const selectTag = (tag: string) => {
-    tags.value.push(tag);
+    if (tags.value.includes(tag)) {
+      tags.value = [];
+    } else {
+      tags.value = [tag];
+    }
     searchFn();
   };
 

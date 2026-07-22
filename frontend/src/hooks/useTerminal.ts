@@ -10,13 +10,13 @@ import { INSTANCE_STATUS_CODE } from "@/types/const";
 import type { DefaultEventsMap } from "@socket.io/component-emitter";
 import { CanvasAddon } from "@xterm/addon-canvas";
 import { FitAddon } from "@xterm/addon-fit";
-import { Unicode11Addon } from "@xterm/addon-unicode11";
 import { WebglAddon } from "@xterm/addon-webgl";
 import { Terminal } from "@xterm/xterm";
 import EventEmitter from "eventemitter3";
 import type { Socket } from "socket.io-client";
 import { computed, onMounted, onUnmounted, ref, unref } from "vue";
 import { makeSocketIo } from "./useSocketIo";
+import { createTerminalHistoryReplayGate } from "./terminalHistoryReplayGate";
 
 export const TERM_COLOR = {
   TERM_RESET: "\x1B[0m",
@@ -69,6 +69,7 @@ export function useTerminal() {
   const isConnect = ref<boolean>(false);
   const socketAddress = ref("");
   let isManualDisconnect = false;
+  const historyReplayGate = createTerminalHistoryReplayGate();
 
   const isGlobalTerminal = computed(() => {
     return state.value?.config.nickname === GLOBAL_INSTANCE_NAME;
@@ -254,9 +255,6 @@ export function useTerminal() {
     const fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
 
-    const unicode11Addon = new Unicode11Addon();
-    term.loadAddon(unicode11Addon);
-    term.unicode.activeVersion = "11";
 
     terminal.value = term;
 
@@ -303,12 +301,26 @@ export function useTerminal() {
     const ctrlCTimeThreshold = 500;
 
     function sendInput(data: string) {
+      // Filter terminal response escape sequences (same as stdout filter)
+      const filtered = data
+        .replace(/\x1b\[(c|0c|>c|6n)/g, "")
+        .replace(/\x1b\[\?[0-9;]+\$y/g, "")
+        .replace(/\x1b\[\?[0-9;]+c/g, "")
+        .replace(/\x1b\[[0-9;]+R/g, "");
+      if (!filtered) return;
       socket?.emit("stream/write", {
-        data: { input: data }
+        data: { input: filtered }
       });
     }
 
     term.onData((data) => {
+      // Ignore input events fired while replaying historical backlog —
+      // these are xterm.js's own synthesized escape-sequence replies
+      // (e.g. cursor position reports), not real keystrokes.
+      if (historyReplayGate.isReplaying()) {
+        return;
+      }
+
       // If the PTY terminal is disabled, no input is sent.
       if (
         state.value?.config.terminalOption?.pty === false ||
@@ -335,17 +347,36 @@ export function useTerminal() {
     return term;
   };
 
+  function writeHistoryLog(text: string): Promise<void> {
+    return new Promise((resolve) => {
+      const term = terminal.value;
+      if (!term) {
+        resolve();
+        return;
+      }
+      historyReplayGate.begin();
+      try {
+        term.write(text, () => {
+          historyReplayGate.end();
+          resolve();
+        });
+      } catch (error) {
+        historyReplayGate.end();
+        resolve();
+      }
+    });
+  }
+
   const clearTerminal = () => {
     terminal.value?.clear();
   };
 
   events.on("stdout", (v: StdoutData) => {
     const text = v.text
-      .replace(/\x1b\[c/g, "")      // Device Attributes request
-      .replace(/\x1b\[0c/g, "")     // Device Attributes request (alt)
-      .replace(/\x1b\[6n/g, "")     // Cursor Position Report request
-      .replace(/\x1b\[>c/g, "")     // Secondary Device Attributes request
-      .replace(/\x1b\][0-9;]+[\x07\x1b]/g, ""); // OSC sequences
+      .replace(/\x1b\[(c|0c|>c|6n)/g, "")     // Terminal query requests (DA, DSR)
+      .replace(/\x1b\[\?[0-9;]+\$y/g, "")      // DECRQT responses
+      .replace(/\x1b\[\?[0-9;]+c/g, "")         // Device Attributes responses
+      .replace(/\x1b\[[0-9;]+R/g, "");          // Cursor Position Report responses
     if (state.value?.config?.terminalOption?.haveColor) {
       terminal.value?.write(encodeConsoleColor(text));
     } else {
@@ -397,7 +428,8 @@ export function useTerminal() {
     execute,
     initTerminalWindow,
     sendCommand,
-    clearTerminal
+    clearTerminal,
+    writeHistoryLog
   };
 }
 

@@ -96,9 +96,72 @@ ClearCraftManager 支持 **Docker** 和 **Podman** 两种容器后端。
   - Podman rootless: `$XDG_RUNTIME_DIR/podman/podman.sock`
   - `DOCKER_HOST` 环境变量始终优先
 
+### Docker Compose 部署
+
+```yml
+services:
+  web:
+    image: githubyumao/mcsmanager-web:latest
+    ports:
+      - "23333:23333"
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - <CHANGE_ME_TO_INSTALL_PATH>/web/data:/opt/mcsmanager/web/data
+      - <CHANGE_ME_TO_INSTALL_PATH>/web/logs:/opt/mcsmanager/web/logs
+      - <CHANGE_ME_TO_INSTALL_PATH>/web/public/upload_files:/opt/mcsmanager/web/public/upload_files
+
+  daemon:
+    image: githubyumao/mcsmanager-daemon:latest
+    restart: unless-stopped
+    ports:
+      - "24444:24444"
+    environment:
+      - MCSM_DOCKER_WORKSPACE_PATH=<CHANGE_ME_TO_INSTALL_PATH>/daemon/data/InstanceData
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - <CHANGE_ME_TO_INSTALL_PATH>/daemon/data:/opt/mcsmanager/daemon/data
+      - <CHANGE_ME_TO_INSTALL_PATH>/daemon/logs:/opt/mcsmanager/daemon/logs
+      - /var/run/docker.sock:/var/run/docker.sock
+```
+
+注意（Linux Rootless Docker）：Daemon 端已支持读取 `DOCKER_HOST`。如果你的 Docker 运行在 rootless 模式，socket 通常位于 `/run/user/<uid>/docker.sock`。请把默认的 socket 挂载替换为 rootless socket，并设置 `DOCKER_HOST`。
+
+使用 docker-compose 启用：
+
+```bash
+mkdir -p <CHANGE_ME_TO_INSTALL_PATH>
+cd <CHANGE_ME_TO_INSTALL_PATH>
+vim docker-compose.yml
+docker compose pull && docker compose up -d
+```
+
+注意：使用 Docker 安装后，Web 端可能会无法再自动连接到 Daemon，你需要新建节点让它们联系到一起。
+
 <br />
 
-## 开发
+## 贡献代码
+
+- 贡献代码前必读：https://github.com/MCSManager/MCSManager/issues/599
+- 代码需要保持现有格式，不得格式化多余代码。
+- 所有代码必须符合国际化标准。
+
+### BUG 报告
+
+欢迎发现的任何问题进行反馈，必当及时修复。
+
+若发现严重安全漏洞又不便公开发布，请发送邮件至: support@mcsmanager.com。
+
+### 鸣谢
+
+感谢以下开发者为 MCSManager 安全性提供重要的代码贡献！
+
+> [@Cuo256](https://github.com/Cuo256), [@xiaosu](https://github.com/xiaosuawa), [@tianjiefeifei](https://github.com/tianjiefeifei), [9Bakabaka](https://github.com/9Bakabaka)
+
+<br />
+
+## 开发此项目
 
 ### 项目结构
 
