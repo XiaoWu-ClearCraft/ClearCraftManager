@@ -3450,5 +3450,8 @@
   "TXT_CODE_2b2ff3ff": "限制容器对特定块设备的写入速率。格式如: /dev/sda:5MB。多个设备用逗号分隔。",
   "TXT_CODE_f0dc9eca": "例如: /dev/sda:5MB",
   "TXT_CODE_CONTAINER_BACKEND": "容器后端",
-  "TXT_CODE_CONTAINER_BACKEND_DESC": "选择容器运行时后端。默认为 Docker。如果您的守护进程节点使用 Podman 作为容器运行时，请切换到 Podman。"
+  "TXT_CODE_CONTAINER_BACKEND_DESC": "选择容器运行时后端。默认为 Docker。如果您的守护进程节点使用 Podman 作为容器运行时，请切换到 Podman。",
+  "TXT_CODE_95192169": "准许所有用户创建API密钥",
+  "TXT_CODE_820260c5": "该功能允许所有用户创建账户的 API密钥",
+  "TXT_CODE_db253979": "未开启API密钥创建功能"
 }
