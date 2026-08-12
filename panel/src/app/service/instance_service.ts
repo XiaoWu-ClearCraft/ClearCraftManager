@@ -38,6 +38,7 @@ export interface IAdvancedInstanceInfo {
   stopCommand?: string;
   processType?: string;
   docker?: Record<string, any>;
+  tag?: string[];
   info?: Record<string, any>;
 }
 
@@ -102,6 +103,7 @@ export async function getInstancesByUuid(
           stopCommand: "",
           processType: "",
           docker: {},
+          tag: [],
           info: {}
         });
         continue;
@@ -126,6 +128,7 @@ export async function getInstancesByUuid(
           stopCommand: instancesInfo.config.stopCommand,
           processType: instancesInfo.config.processType,
           docker: instancesInfo.config.docker || {},
+          tag: instancesInfo.config.tag || [],
           info: instancesInfo.info || {}
         });
       } catch (error) {
@@ -161,6 +164,7 @@ export async function getInstancesByUuid(
               stopCommand: inst.config.stopCommand,
               processType: inst.config.processType,
               docker: inst.config.docker || {},
+              tag: inst.config.tag || [],
               info: inst.info || {}
             });
           }

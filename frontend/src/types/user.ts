@@ -1,10 +1,19 @@
 export interface UserInstance {
-  hostIp: string;
   instanceUuid: string;
-  nickname: string;
   daemonId: string;
+  hostIp: string;
+  remarks?: string;
   status: number;
-  config?: IGlobalInstanceConfig;
+  nickname: string;
+  ie?: string;
+  oe?: string;
+  endTime?: number;
+  lastDatetime?: number;
+  stopCommand?: string;
+  processType?: string;
+  docker?: Record<string, any>;
+  tag?: string[];
+  info?: Record<string, any>;
 }
 
 export interface BaseUserInfo {
