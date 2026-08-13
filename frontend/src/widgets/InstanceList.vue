@@ -89,7 +89,17 @@ const instancesMoreInfo = computed(() => {
 
 // Drag state
 const draggedInstanceId = ref<string | null>(null);
-const dragOverInstanceId = ref<string | null>(null);
+const draggedSectionTag = ref<string | undefined>();
+const dropIndicator = ref<{ instanceId: string; sectionKey: string; position: "before" | "after" } | null>(null);
+
+function instanceHasTag(inst: InstanceMoreDetail, tag: string | undefined): boolean {
+  if (tag === undefined) {
+    const t = inst.config?.tag || [];
+    return t.length === 0;
+  }
+  const t = inst.config?.tag || [];
+  return t.includes(tag);
+}
 
 // Tag-grouped sections for rendering
 interface TagSection {
@@ -150,43 +160,76 @@ const tagSections = computed<TagSection[]>(() => {
   return sections;
 });
 
-// Drag reorder within a section
-const onCardDragStart = (instanceId: string, event: DragEvent) => {
+// Drag reorder within same tag group (insertion mode)
+const onCardDragStart = (instanceId: string, sectionTag: string | undefined, event: DragEvent) => {
   draggedInstanceId.value = instanceId;
+  draggedSectionTag.value = sectionTag;
   if (event.dataTransfer) {
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain", instanceId);
   }
 };
 
-const onCardDragOver = (instanceId: string, event: DragEvent) => {
+const onCardDragOver = (targetId: string, sectionTag: string | undefined, event: DragEvent) => {
   event.preventDefault();
-  if (draggedInstanceId.value && draggedInstanceId.value !== instanceId) {
-    dragOverInstanceId.value = instanceId;
+  if (!draggedInstanceId.value || !draggedSectionTag.value || draggedSectionTag.value !== sectionTag) return;
+  if (draggedInstanceId.value === targetId) return;
+
+  // Determine insertion position: left half = before, right half = after
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+  const relX = (event.clientX - rect.left) / rect.width;
+  const sectionKey = sectionTag ?? "untagged";
+  if (relX < 0.4) {
+    dropIndicator.value = { instanceId: targetId, sectionKey, position: "before" };
+  } else if (relX > 0.6) {
+    dropIndicator.value = { instanceId: targetId, sectionKey, position: "after" };
+  } else if (dropIndicator.value?.instanceId === targetId && dropIndicator.value?.sectionKey === sectionKey) {
+    dropIndicator.value = null;
   }
 };
 
-const onCardDragLeave = () => {
-  dragOverInstanceId.value = null;
+const onCardDragEnd = () => {
+  dropIndicator.value = null;
+  draggedInstanceId.value = null;
+  draggedSectionTag.value = undefined;
 };
 
-const onCardDrop = async (targetInstanceId: string, ev: DragEvent) => {
-  ev.preventDefault();
-  const srcId = draggedInstanceId.value;
-  dragOverInstanceId.value = null;
-  draggedInstanceId.value = null;
-  if (!srcId || srcId === targetInstanceId) return;
+const onCardDragLeave = () => {
+  // Clear drop indicator when leaving a card area,
+  // but only if not entering another card (handled by dragover)
+  dropIndicator.value = null;
+};
 
-  // Find source and target instances
+const onCardDrop = async (targetInstanceId: string, sectionTag: string | undefined) => {
+  const srcId = draggedInstanceId.value;
+  const indicator = dropIndicator.value;
+  const srcSection = draggedSectionTag.value;
+  const sectionKey = sectionTag ?? "untagged";
+  dropIndicator.value = null;
+  draggedInstanceId.value = null;
+  draggedSectionTag.value = undefined;
+  if (!srcId || !indicator || indicator.sectionKey !== sectionKey || srcSection !== sectionTag) return;
+  if (srcId === targetInstanceId) return;
+
   const allInstances = instancesMoreInfo.value;
   const srcIdx = allInstances.findIndex((i) => i.instanceUuid === srcId);
-  const dstIdx = allInstances.findIndex((i) => i.instanceUuid === targetInstanceId);
-  if (srcIdx === -1 || dstIdx === -1) return;
+  let dstBaseIdx = allInstances.findIndex((i) => i.instanceUuid === targetInstanceId);
+  if (srcIdx === -1 || dstBaseIdx === -1) return;
 
-  // Rebuild order
+  // Determine insertion index
+  let insertIdx = dstBaseIdx;
+  if (indicator.position === "after") {
+    insertIdx = dstBaseIdx + 1;
+  }
+  // If source is before target in the array, adjust for removal
+  if (srcIdx < insertIdx) {
+    insertIdx--;
+  }
+
+  // Rebuild order (only affect same-section instances)
   const reordered = [...allInstances];
   const [moved] = reordered.splice(srcIdx, 1);
-  reordered.splice(dstIdx, 0, moved);
+  reordered.splice(insertIdx, 0, moved);
 
   // Save new order values
   const daemonId = currentRemoteNode.value?.uuid || "";
@@ -842,7 +885,7 @@ onMounted(async () => {
             <span class="tag-section-title">{{ section.tagDisplay }}</span>
           </div>
           <!-- Card grid -->
-          <a-row :gutter="[16, 16]" class="tag-section-grid">
+          <a-row :gutter="[16, 16]" class="tag-section-grid" @dragleave="onCardDragLeave">
             <fade-up-animation>
               <a-col
                 v-for="item in section.instances"
@@ -852,27 +895,34 @@ onMounted(async () => {
                 :lg="8"
                 :sm="12"
               >
-                <div
-                  :draggable="!multipleMode"
-                  class="instance-card-drag-wrapper"
-                  :class="{
-                    'drag-over-border': dragOverInstanceId === item.instanceUuid && draggedInstanceId !== item.instanceUuid
-                  }"
-                  @dragstart="onCardDragStart(item.instanceUuid, $event)"
-                  @dragover="onCardDragOver(item.instanceUuid, $event)"
-                  @dragleave="onCardDragLeave"
-                  @drop="onCardDrop(item.instanceUuid, $event)"
-                >
-                  <Shortcut
-                    class="instance-card"
-                    :class="{ selected: multipleMode && findInstance(item) }"
-                    style="height: 100%"
-                    :card="card"
-                    :target-instance-info="item"
-                    :target-daemon-id="currentRemoteNode?.uuid"
-                    @click="handleSelectInstance(item)"
-                    @refresh-list="initInstancesData()"
-                  />
+                <div class="instance-card-slot">
+                  <div
+                    v-if="dropIndicator?.instanceId === item.instanceUuid && dropIndicator?.sectionKey === (section.tag || 'untagged') && dropIndicator?.position === 'before'"
+                    class="drop-indicator-line drop-indicator--before"
+                  ></div>
+                  <div
+                    :draggable="!multipleMode"
+                    class="instance-card-drag-wrapper"
+                    @dragstart="onCardDragStart(item.instanceUuid, section.tag, $event)"
+                    @dragover="onCardDragOver(item.instanceUuid, section.tag, $event)"
+                    @dragend="onCardDragEnd"
+                    @drop="onCardDrop(item.instanceUuid, section.tag)"
+                  >
+                    <Shortcut
+                      class="instance-card"
+                      :class="{ selected: multipleMode && findInstance(item) }"
+                      style="height: 100%"
+                      :card="card"
+                      :target-instance-info="item"
+                      :target-daemon-id="currentRemoteNode?.uuid"
+                      @click="handleSelectInstance(item)"
+                      @refresh-list="initInstancesData()"
+                    />
+                  </div>
+                  <div
+                    v-if="dropIndicator?.instanceId === item.instanceUuid && dropIndicator?.sectionKey === (section.tag || 'untagged') && dropIndicator?.position === 'after'"
+                    class="drop-indicator-line drop-indicator--after"
+                  ></div>
                 </div>
               </a-col>
             </fade-up-animation>
@@ -1010,6 +1060,10 @@ onMounted(async () => {
   margin-top: 12px;
 }
 
+.instance-card-slot {
+  position: relative;
+}
+
 .instance-card-drag-wrapper {
   transition: all 0.2s ease;
   cursor: grab;
@@ -1019,9 +1073,23 @@ onMounted(async () => {
   }
 }
 
-.drag-over-border .instance-card {
-  border: 2px dashed var(--color-blue-5) !important;
-  opacity: 0.8;
+.drop-indicator-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--color-blue-5);
+  border-radius: 2px;
+  z-index: 10;
+  box-shadow: 0 0 6px rgba(24, 144, 255, 0.5);
+}
+.drop-indicator--before {
+  left: -8px;
+  transform: translateX(-50%);
+}
+.drop-indicator--after {
+  right: -8px;
+  transform: translateX(50%);
 }
 
 .instance-card {

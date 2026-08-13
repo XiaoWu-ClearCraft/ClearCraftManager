@@ -247,7 +247,7 @@ const createInstance = async () => {
             <a-select
               v-model:value="formData.type"
               :placeholder="t('TXT_CODE_3bb646e4')"
-              @change="(value) => changeInstanceType(value?.toString() ?? '')"
+              @change="(value: any) => changeInstanceType(value?.toString() ?? '')"
             >
               <a-select-option
                 v-for="(item, key) in INSTANCE_TYPE_TRANSLATION"

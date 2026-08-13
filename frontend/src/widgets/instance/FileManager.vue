@@ -648,7 +648,7 @@ onUnmounted(() => {
               v-model:activeKey="activeTab"
               type="editable-card"
               @edit="onEditTabs"
-              @change="(key) => handleChangeTab(key as string)"
+              @change="(key: any) => handleChangeTab(key as string)"
             >
               <a-tab-pane v-for="b in currentTabs" :key="b.key" :tab="b.name" :closable="true">
               </a-tab-pane>

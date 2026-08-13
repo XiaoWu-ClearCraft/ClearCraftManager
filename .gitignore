@@ -125,3 +125,10 @@ src/public/1.png
 */.idea/*
 
 .turbo
+
+# Build cache
+.build-cache/
+
+# Build output directory and release archive
+/clearcraftmanager/
+/clearcraftmanager_linux_release.tar.gz
